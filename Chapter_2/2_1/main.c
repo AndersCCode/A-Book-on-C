@@ -2,16 +2,6 @@
 #include <limits.h>
 #include <float.h>
 
-unsigned char uc = 255;
-unsigned char us = 65535;
-unsigned int ui = 42;
-
-void print_binary_unsigned(unsigned long long n, int bits) {
-    for (int i = bits - 1; i >= 0; i--) {
-        putchar((n & (1ULL << i)) ? '1' : '0');
-    }
-}
-
 int main(void) {
     printf("Ranges and sizes on this system:\n\n");
 
@@ -61,15 +51,6 @@ int main(void) {
     int           int_min    = -int_max - 1;
     long          long_min   = -long_max - 1;
     long long     llong_min  = -llong_max - 1;
-
-    printf("  signed char:     %12d to %12d\n", schar_min, schar_max);
-    printf("  0U: %08x\n", 0U);
-    printf("  ~0U: %08x\n", ~0U);
-    printf("  ~0U >> 1: %08x %d\n\n", ~0U >> 1, ~0U >> 1);
-
-    print_binary_unsigned(uc, 8); printf("\n");
-    print_binary_unsigned(us, 16); printf("\n");
-    print_binary_unsigned(ui, 32); printf("\n");
     
     printf("  unsigned char:   %12d to %12u\n", 0, uchar_max);
 
