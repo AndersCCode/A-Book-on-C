@@ -4,6 +4,11 @@ leaving the other bits unchanged. */
 #include <stdio.h>
 
 unsigned setbits(unsigned x, int p, int n, unsigned y)  {
+
+    printf("x = 0x%02X 0b%08b\n",  x, x);
+    printf("y = 0x%02X 0b%08b\n",  y, y);
+    printf("p = %d n = %d\n", p, n);
+
     // 1. Create mask with n ones in the rightmost positions:   00000111  (for n=3)
     unsigned mask = ~(~0u << n);          
     printf("mask = 0x%02X 0b%08b\n",  mask, mask);
@@ -35,7 +40,7 @@ int main(void) {
     unsigned y = 0x07;  // 0000 0111
     unsigned result;    // 0111 1100 0x7C
 
-    result = setbits(x,5,3,y);
+    result = setbits(x,7,4,y);
 
     printf("\n\nResult: 0x%02X binary: %08b\n", result, result);
 
