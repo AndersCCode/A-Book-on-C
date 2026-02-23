@@ -75,17 +75,19 @@ void unescape(char s[], const char t[])
 }
 
 int main(void) {
-    char t[] = "abc \t \n";
-    char s[100];
     
-    escape(s, t);
-    
-    printf("Original string t: %s\n", t);
-    printf("String with escape characters revealed s: %s\n\n", s);
+    char original[] = "a \t \n \\ \\x \\";
+    char escaped[200];
+    char recovered[200];
 
-    unescape(s,t);
-      
-    printf("String unescaped (back to original) s: %s\n", s);
+    escape(escaped, original);
+    
+    printf("Original string: %s\n", original);
+    printf("Escaped (escape characters revealed): %s\n\n", escaped);
+
+    unescape(recovered,escaped);
+    
+    printf("String unescaped (back to original): %s\n", recovered);
         
     return 0;
 }
