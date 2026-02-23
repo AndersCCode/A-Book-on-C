@@ -20,7 +20,7 @@ int atoi(char s[]) {
 
 int main(void) {
 
-    char s[] = "  -235 A";
+    char s[] = "  -235 A"; // Test all types of characters
 
     printf("Result = %d\n", atoi(s));
 
