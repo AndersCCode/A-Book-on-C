@@ -13,14 +13,14 @@ int atoi(char s[]) {
     if (s[i] == '+' || s[i] == '-') // skip sign
         i++;
     
-    for (n = 0; isdigit(s[i]); i++)
+    for (n = 0; isdigit(s[i]); i++) // Convert only digit characters
         n = 10 * n + (s[i] - '0');
     return sign * n;
 }
 
 int main(void) {
 
-    char s[] = "25";
+    char s[] = "  -235 A";
 
     printf("Result = %d\n", atoi(s));
 
