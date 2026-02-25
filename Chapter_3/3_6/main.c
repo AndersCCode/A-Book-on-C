@@ -48,20 +48,20 @@ int main(void) {
 
     char buffer[32];
 
-    printf("itoa test:\n");
-    printf("==========\n");
+    printf("\nitoa test:\n");
+    printf("==========================\n");
     
     itoa(-2147483648, buffer, 15);   
     printf("INT_MIN = %s\n", buffer);
     
     itoa(2147483647, buffer, 15);  
-    printf("INT_MIN = %s\n", buffer);
+    printf("INT_MAX = %s\n", buffer);
 
     itoa(0, buffer, 15);
-    printf("0 = %s\n", buffer);
+    printf("      0 = %s\n", buffer);
 
     itoa(123, buffer, 15);
-    printf("123 = %s\n", buffer);
+    printf("    123 = %s\n\n", buffer);
 
     return 0;
 }
