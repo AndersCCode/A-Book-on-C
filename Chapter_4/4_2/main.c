@@ -69,7 +69,7 @@ int main(void) {
     printf("69.420e-2 --> %.6f\n", atof("69.420e-2"));
     printf("1e10 --> %.0f\n", atof("1e10"));
     printf("-2.5E+3 --> %.0f\n", atof("-2.5E+3"));
-    printf("6.022e23 --> %.0f\n", atof("6.022e23"));
+    printf("6.022e23 --> %.15g\n", atof("6.022e23"));
 
     return 0;
 }
