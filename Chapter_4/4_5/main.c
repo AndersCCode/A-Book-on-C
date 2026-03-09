@@ -148,6 +148,34 @@ int main(void) {
                 else 
                     printf("error: zero divisor\n");
                 break;
+            case 'n':
+                if (sp == 1) {
+                    push(sin(pop()));
+                }
+                else {
+                    printf("Sin calculation error: need at least one element\n");
+                }
+                break;
+            case 'w':
+                if (sp >= 2) {
+                    double op2 = pop(); // Exponent comes first. Was pushed last
+                    double op1 = pop(); // Base
+
+                    push(pow(op1, op2));
+                }
+                else {
+                    printf("Pow calculation error: need two elements\n");
+                }
+                break;
+            case 'e':
+                if (sp == 1) {
+                    push(exp(pop()));
+                }
+                else {
+                    printf("Exp calculation error: need one element\n");
+                }
+                break;
+                
             case '\n':
                 //printf("Result:\t%.8g\n", pop());
                 break;
