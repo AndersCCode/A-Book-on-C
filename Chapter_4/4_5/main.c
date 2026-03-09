@@ -1,5 +1,4 @@
-/* Add commands to print the top element of the stack without poping, to duplicate it,
-and swap the top two elements. Add a command to clear the stack. */
+/* Add access to library functions like sin, exp and pow. 
 
 #include <stdio.h>
 #include <stdlib.h>
