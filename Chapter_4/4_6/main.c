@@ -259,7 +259,7 @@ int main(void) {
                     ungetch(x);
                     push(variables[var]);
                 }
-            break;
+            break; 
 
             default:
                 printf("error: unknown command %c\n", type);
