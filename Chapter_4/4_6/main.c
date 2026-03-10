@@ -130,9 +130,9 @@ int main(void) {
 
     printf("Reverse Polish calculator\n");
     printf("Commands (lowercase):\n");
-    printf("c=clear, s=swap, d=duplicate, t=top, a=all, v=variables, r=result+print, l=show last\n");
+    printf("c=clear, s=swap, d=duplicate, t=top, a=all, v=variables, r=result+print, l=show last\n\n");
     printf("Variables: uppercase A-Z\n");
-    printf("42 A r --> A = 42, A= (A is assigned top value of stack)\n");
+    printf("42 A r --> A = 42, A= (A is assigned top value of stack)\n\n");
     printf("Enter expressions in RPN, press r to show result\n");   
     printf("Ctrl+C to quit\n\n");
 
