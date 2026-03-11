@@ -48,7 +48,7 @@ void duplicate_top(void) {
     }
 }
 
-void print_top_of_stack() {
+void print_top_of_stack(void) {
     if (sp > 0)
         printf("Top stack element is: %.8g\n", val[sp-1]);
     else {
@@ -266,5 +266,5 @@ int main(void) {
                 break;            
         }
     }
-    return 0;
+return 0;
 }
