@@ -106,29 +106,28 @@ int getop(char s[]) {
         return c;               /* not a number */
 
     i = 0;
-    if (c == '-') {                     /* possible negative number */
-        int next = getch();
-        if (!isdigit(next) && next != '.') {
-            ungetch(next);              /* it was the binary minus operator */
+
+    if (c == '-') {
+        s[i++] = c;
+        c = getch();
+        if (!isdigit(c) && c != '.') {
+            ungetch(c);
             return '-';
         }
-        s[i++] = '-';                   /* start of negative number */
-        c = next;                       /* continue with the digit or '.' */
     }
+    s[i++] = c;   // store first digit (or the char after sign)
 
-    if (isdigit(c))                     /* collect integer part */
-        while (isdigit(s[++i] = c = getch()))
-            ;
-    if (c == '.')                       /* collect fraction part */
-        while (isdigit(s[++i] = c = getch()))
-            ;
-    s[i] = '\0';
+    while (isdigit(s[i++] = c = getch()))
+        ;
 
-    if (isalpha(c))
-        return c;
+    if (c == '.')
+        while (isdigit(s[i++] = c = getch()))
+            ;
+    s[--i] = '\0';
 
     if (c != EOF)
         ungetch(c);
+
     return NUMBER;
 }
 

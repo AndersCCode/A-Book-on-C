@@ -106,29 +106,42 @@ int getop(char s[]) {
         return c;               /* not a number */
 
     i = 0;
-    if (c == '-') {                     /* possible negative number */
-        int next = getch();
-        if (!isdigit(next) && next != '.') {
-            ungetch(next);              /* it was the binary minus operator */
+
+    /* Handle possible negative number or just a starting digit/dot */
+    if (c == '-') {
+        s[i++] = '-';
+        c = getch();                    // get the next char after '-'
+        if (!isdigit(c) && c != '.') {
+            ungetch(c);                 // not a number → it's binary minus
             return '-';
         }
-        s[i++] = '-';                   /* start of negative number */
-        c = next;                       /* continue with the digit or '.' */
+        // We now know it's a negative number → store this digit/dot
+        s[i++] = c;
+    } else if (isdigit(c) || c == '.') {
+        s[i++] = c;                     // positive number or .5 style
+    } else {
+        return c;                       // operator or other char
     }
 
-    if (isdigit(c))                     /* collect integer part */
-        while (isdigit(s[++i] = c = getch()))
-            ;
-    if (c == '.')                       /* collect fraction part */
-        while (isdigit(s[++i] = c = getch()))
-            ;
-    s[i] = '\0';
+    /* Collect rest of integer part */
+    while (isdigit(s[i++] = c = getch()))
+        ;
 
-    if (isalpha(c))
-        return c;
+    /* Collect fraction part if any */
+    if (c == '.') {
+        while (isdigit(s[i++] = c = getch()))
+            ;
+    }
+
+    s[--i] = '\0';                      // back up one, overwrite last non-digit
 
     if (c != EOF)
         ungetch(c);
+
+    /* Optional: if next char is letter, treat as variable (your existing code) */
+    if (isalpha(c))
+        return c;
+
     return NUMBER;
 }
 
