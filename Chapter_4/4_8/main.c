@@ -94,39 +94,57 @@ void ungetch(int c) {
 
 }
 
-/* get next operator or numeric operand */
+/* get next operator, numeric operand or variable letter 
+    Returns:
+    NUMBER          if a number was found
+    the character   if it's an operator (+ - * / % etc.) 
+    a letter        if it's a variable name (A-Z)
+    */
 int getop(char s[]) {
     int i, c;
 
+    // skip trailing spaces
     while ((s[0] = c = getch()) == ' ' || c == '\t')
         ;
-    s[1] = '\0';
-
-    if (!isdigit(c) && c != '.' && c != '-')
-        return c;               /* not a number */
+    s[1] = '\0';                        // When other character enters --> terminate string
 
     i = 0;
 
+    /* Handle possible negative number or just a starting digit/dot */
     if (c == '-') {
-        s[i++] = c;
-        c = getch();
+        s[i++] = '-';
+        c = getch();                    // get the next char after '-'
         if (!isdigit(c) && c != '.') {
-            ungetch(c);
+            ungetch(c);                 // not a number → it's binary minus
             return '-';
         }
+        // We now know it's a negative number → store this digit/dot
+        s[i++] = c;
+    } else if (isdigit(c) || c == '.') {
+        s[i++] = c;                     // positive number or .5 style
+    } else {
+        return c;                       // operator or other
     }
-    s[i++] = c;   // store first digit (or the char after sign)
 
+    /* Collect rest of integer part */
     while (isdigit(s[i++] = c = getch()))
         ;
 
-    if (c == '.')
+    /* Collect fraction part if any */
+    if (c == '.') {
         while (isdigit(s[i++] = c = getch()))
             ;
-    s[--i] = '\0';
+    }
 
-    if (c != EOF)
-        ungetch(c);
+    s[--i] = '\0';                      // back up one, overwrite last non-digit
+
+    if (c != EOF)                       // Pushing back EOF will cause infinte loop
+        ungetch(c);                     // Push back what's not part of the number 
+                                        // so it's ready for the next loop
+
+    /* Optional: if next char is letter, treat as variable */
+    if (isalpha(c))
+        return c;
 
     return NUMBER;
 }

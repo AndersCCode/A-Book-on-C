@@ -104,41 +104,52 @@ void ungets(const char s[]) {
     }
 }
 
-/* get next operator or numeric operand */
 int getop(char s[]) {
     int i, c;
 
+    // skip trailing spaces
     while ((s[0] = c = getch()) == ' ' || c == '\t')
         ;
-    s[1] = '\0';
-
-    if (!isdigit(c) && c != '.' && c != '-')
-        return c;               /* not a number */
+    s[1] = '\0';                        // When other character enters --> terminate string
 
     i = 0;
-    if (c == '-') {                     /* possible negative number */
-        int next = getch();
-        if (!isdigit(next) && next != '.') {
-            ungetch(next);              /* it was the binary minus operator */
+
+    /* Handle possible negative number or just a starting digit/dot */
+    if (c == '-') {
+        s[i++] = '-';
+        c = getch();                    // get the next char after '-'
+        if (!isdigit(c) && c != '.') {
+            ungetch(c);                 // not a number → it's binary minus
             return '-';
         }
-        s[i++] = '-';                   /* start of negative number */
-        c = next;                       /* continue with the digit or '.' */
+        // We now know it's a negative number → store this digit/dot
+        s[i++] = c;
+    } else if (isdigit(c) || c == '.') {
+        s[i++] = c;                     // positive number or .5 style
+    } else {
+        return c;                       // operator or other
     }
 
-    if (isdigit(c))                     /* collect integer part */
-        while (isdigit(s[++i] = c = getch()))
-            ;
-    if (c == '.')                       /* collect fraction part */
-        while (isdigit(s[++i] = c = getch()))
-            ;
-    s[i] = '\0';
+    /* Collect rest of integer part */
+    while (isdigit(s[i++] = c = getch()))
+        ;
 
+    /* Collect fraction part if any */
+    if (c == '.') {
+        while (isdigit(s[i++] = c = getch()))
+            ;
+    }
+
+    s[--i] = '\0';                      // back up one, overwrite last non-digit
+
+    if (c != EOF)                       // Pushing back EOF will cause infinte loop
+        ungetch(c);                     // Push back what's not part of the number 
+                                        // so it's ready for the next loop
+
+    /* Optional: if next char is letter, treat as variable */
     if (isalpha(c))
         return c;
 
-    if (c != EOF)
-        ungetch(c);
     return NUMBER;
 }
 
