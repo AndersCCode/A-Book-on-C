@@ -1,14 +1,5 @@
-/* Write a routine ungets(s) that will push back an entire string onto the input. Should ungets know about 
-buf and bufp, or should it just use ungetch ? */
-
-/*  getch = get one character
-    ungetch = undo/push back one character (put it back into the input stream)
-
-    gets = get a string 
-    ungets = undo/push back a whole string to the input stream 
-    
-    Should ungets know about buf and bufp, or should it just use ungetch ?
-    No, they shouldn't be known. K&R advocates for abstraction. */
+/* Our getch and ungetch do not handle a pushed back EOF correctly. Decide what their 
+properties ought to be if an EOF is pushed back, then implement your design. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,8 +17,8 @@ buf and bufp, or should it just use ungetch ? */
 int sp = 0;             /* stack pointer */
 double val[MAXVAL];     /* stack of values */
 
-char buf[BUFSIZE] = {0};  /* buffer for ungetch */
-int bufp = 0;   /* next free position in buf */
+static int bufchar = 0;     /* The pushed-back character */
+static int bufempty = 1;    /* 1 = buffer empty, 0 = one character is waiting */
 
 double variables[MAXVAR] = {0.0}; /* Array for variables initialized to 0 */
 double last_printed = 0.0;
@@ -84,28 +75,35 @@ void print_variables(void) {
 
 /* get a (possibly pushed back) character */
 int getch(void) {
-    return (bufp > 0) ? buf[--bufp] : getchar(); // If character has been written --> return it, otherwise read again
-}
-
-/* push character back on input */
-void ungetch(int c) {
-    if (bufp >= BUFSIZE)
-        printf("ungetch: too many characters\n");
-    else    
-        buf[bufp++] = c;
-}
-
-/* Push string back on input */
-void ungets(const char s[]) {
-    
-    int len = strlen(s);
-    
-    /* Push chars in reverse order so getch sees them in original order */
-    for (int i = len - 1; i >= 0; i--) {
-        ungetch(s[i]);
+    if (bufempty == 0) { // if bufempty is false (a character is waiting)
+        bufempty = 1;
+        return bufchar;
+    } else {
+        return getchar(); // Get new character
     }
 }
 
+/* push character back on input 
+We don't allow pushback of EOF, because that would cause getch() to return EOF forever,
+breaking the main loop. Attempting to push EOF is ignored */
+void ungetch(int c) {
+    if (bufempty == 0) { // Buffer is full
+        printf("Ungetch: Too many characters\n");
+    } else if (c == EOF) {
+        printf("ungetch: pushback of EOF ignored\n");
+    } else {
+        bufchar = c;
+        bufempty = 0;
+    }
+
+}
+
+/* get next operator, numeric operand or variable letter 
+    Returns:
+    NUMBER          if a number was found
+    the character   if it's an operator (+ - * / % etc.) 
+    a letter        if it's a variable name (A-Z)
+    */
 int getop(char s[]) {
     int i, c;
 
@@ -144,7 +142,7 @@ int getop(char s[]) {
 
     s[--i] = '\0';                      // back up one, overwrite last non-digit
 
-    if (c != EOF)                       // Pushing back EOF will cause infinte loop
+    if (c != EOF)                       // Pushing back EOF will cause infinite loop
         ungetch(c);                     // Push back what's not part of the number 
                                         // so it's ready for the next loop
 
@@ -163,11 +161,8 @@ int main(void) {
     printf("Reverse Polish calculator\n");
     printf("Commands (lowercase):\n");
     printf("c=clear, s=swap, d=duplicate, t=top, a=all, v=variables, r=result+print, l=show last\n\n");
-    printf("u=ungets (test av funktion)\n\n");
     printf("Variables: uppercase A-Z\n");
     printf("42 A r --> A = 42, A= (A is assigned top value of stack)\n\n");
-
-
     printf("Enter expressions in RPN, press r to show result\n");   
     printf("Ctrl+C to quit\n\n");
 
@@ -276,10 +271,6 @@ int main(void) {
             case 'c':
                 sp = 0;
                 printf("Stack cleared\n");
-                break;
-            case 'u':
-                ungets("42 7 / r");
-                printf("Pushed back test string '42 7 / r'\n");
                 break;
 
             case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I':
