@@ -96,7 +96,7 @@ int get_line(char s[], int lim) {
 int getop(char s[], char line[], int *pos) {
     int i, c;
 
-    // skip trailing spaces
+    // skip white spaces
     while ((c = line[*pos]) == ' ' || c == '\t')
         (*pos)++;
     
@@ -105,34 +105,44 @@ int getop(char s[], char line[], int *pos) {
     }
 
     i = 0;
-    s[i++] = c;     // store a "real character"
+    s[i++] = c;     // first significant character 
     (*pos)++;
 
-    if (!isdigit(c) && c != '.' && c != '-')        // variable ?
+    if (!isdigit(c) && c != '.' && c != '-')        // Not a number or a negative sign --> return operator/variable
         return c;
 
-    /* Handle possible negative number or just a starting digit/dot */
+    // Handle possible negative number or just a starting digit/dot 
     if (c == '-') {
-        c = line[*pos];
-        if (!isdigit(c) && c != '.') {  // binary operator ?
-            (*pos)--;                   // back up one position
+        int next = line[*pos];
+        if (!isdigit(next) && next != '.') {  // It is a binary minus operator
+            s[0] = '-';
+            s[1] = '\0';                  // back up one position
             return '-';
         }
-        s[i++] = c;     // store '-'
+        s[1] = next;     // start a negative number0
         (*pos)++;
+        i = 2;
+        //i++; // or i = 2;
+        //s[2] = '\0';
     }
 
-    // Read the rest of the number
-    while (isdigit(s[i++] = c = line[(*pos)++]))        // read part before .
-        ;
-
-
+    // Read the rest of the number, read integer part
+    while (isdigit(c = line[*pos])) {
+        s[i++] = c;
+        (*pos)++;
+    }        
+        
+    // read decimal part
     if (c == '.') {
-        while (isdigit(s[i++] = c = line[(*pos)++]))    // read part after .
-            ;
+        s[i++] = c;
+        (*pos)++;
+        while (isdigit(c = line[*pos])) {
+            s[i++] = c;
+            (*pos)++;
+        }   
     }
 
-    s[--i] = '\0';
+    s[i] = '\0';
 
     return NUMBER;
 }
@@ -157,12 +167,16 @@ int main(void) {
         while (1) {
             int type = getop(s, line, &pos);
 
+            // printf("pos = %2d | type = %3d ('%c') | s = '%s'\n", pos, type, isprint(type) ? type : '.', s);
+            //printf("[debug] after getop → pos = %d, type = %d ('%c'), s='%s'\n", pos, type, isprint(type)?type:'.', s);
+
             if (type == EOF || line[pos] == '\0')
                 break;
         
             switch (type) {
                 
                 case NUMBER:
+                    // printf("[debug] parsed number: '%s' → %g\n", s, atof(s));
                     push(atof(s));
                     break;
 
@@ -173,8 +187,10 @@ int main(void) {
                     push(pop() * pop());
                     break;
                 case '-': // order of operands is important
+                    //printf("[debug] entering case '-' , sp = %d, pos = %d\n", sp, pos);
                     op2 = pop();
                     push(pop() - op2);
+                    //printf("[debug] after subtraction , sp = %d, pos = %d\n", sp, pos);
                     break;
                 case '/': // order of operands is important
                     op2 = pop();
