@@ -10,15 +10,12 @@ Hint: use an internal static variable. */
 #define MAXOP 100   /* max size of operand or operator */
 #define NUMBER '0'  /* signal that a number was found */
 #define MAXVAL 100  /* maximum depth of val stack */
-#define BUFSIZE 100 /* getch and ungetch */
 #define MAXVAR 26
+#define VAR_ASSIGN '='
 
 /* external variables */
 int sp = 0;             /* stack pointer */
 double val[MAXVAL];     /* stack of values */
-
-static int bufchar = 0;     /* The pushed-back character */
-static int bufempty = 1;    /* 1 = buffer empty, 0 = one character is waiting */
 
 double variables[MAXVAR] = {0.0}; /* Array for variables initialized to 0 */
 double last_printed = 0.0;
@@ -73,31 +70,6 @@ void print_variables(void) {
         printf("%c = %g%c", 'A' + i, variables[i], (i%10==9 || i == MAXVAR-1) ? '\n' : ' ');  
 }
 
-/* get a (possibly pushed back) character */
-int getch(void) {
-    if (bufempty == 0) { // if bufempty is false (a character is waiting)
-        bufempty = 1;
-        return bufchar;
-    } else {
-        return getchar(); // Get new character
-    }
-}
-
-/* push character back on input 
-We don't allow pushback of EOF, because that would cause getch() to return EOF forever,
-breaking the main loop. Attempting to push EOF is ignored */
-void ungetch(int c) {
-    if (bufempty == 0) { // Buffer is full
-        printf("Ungetch: Too many characters\n");
-    } else if (c == EOF) {
-        printf("ungetch: pushback of EOF ignored\n");
-    } else {
-        bufchar = c;
-        bufempty = 0;
-    }
-
-}
-
 /* get next operator, numeric operand or variable letter 
     Returns:
     NUMBER          if a number was found
@@ -106,59 +78,73 @@ void ungetch(int c) {
     */
 int getop(char s[]) {
     int i, c;
+    static int lastc = EOF;
 
-    int static lastc = ' ';
-
-    // If we have a pushed back charachter, use it; otherwise read a new one
-    if (lastc != ' ') {
-        c = lastc;      // use pushed back character
-        lastc = ' ';    // restore lastc (ready to take another pushed back character)
+    /* Get first non-whitespace character, using static pushback if present */
+    if (lastc != EOF) {
+        c = lastc;
+        lastc = EOF;
     } else {
-        // skip trailing spaces
-        while ((s[0] = c = getch()) == ' ' || c == '\t') {
-            ;
-        }
+        c = getchar();
     }
 
-    s[1] = '\0';                        // When other character enters --> terminate string
+    /* Skip all whitespaces (spaces, tabs, newlines) */
+    while (c == ' ' || c == '\t' || c == '\n') {
+        c = getchar();
+    }
 
+    if (c == EOF) {
+        s[0] = '\0';
+        return EOF;
+    }
+
+    s[0] = c;
+    s[1] = '\0';
+    
     i = 0;
 
-    /* Handle possible negative number or just a starting digit/dot */
-    if (c == '-') {
-        s[i++] = '-';
-        c = getch();                    // get the next char after '-'
-        if (!isdigit(c) && c != '.') {
-            lastc = c;                 // not a number → it's binary minus
-            return '-';
+    /* Variable handling: A or A= */
+    if (isupper(c)) {
+        int next = getchar();
+        if (next == '=') {
+            return VAR_ASSIGN;
+        } else {
+            if (next != EOF)
+                lastc = next;
+            return c;               // just the variable letter
         }
-        // We now know it's a negative number → store this digit/dot
-        s[i++] = c;
-    } else if (isdigit(c) || c == '.') {
-        s[i++] = c;                     // positive number or .5 style
-    } else {
-        return c;                       // operator or other
     }
 
-    /* Collect rest of integer part */
-    while (isdigit(s[i++] = c = getch()))
+    /* Number or operator handling */
+    if (c == '-') {
+        s[i++] = '-';
+        c = getchar();
+        if (!isdigit(c) && c != '.') {
+            if (c != EOF)
+                lastc = c;
+            return '-';
+        }
+        s[i++] = c;
+    } else if (isdigit(c) || c == '.') {
+        s[i++] = c;
+    } else {
+        return c;                   // operator or other single char
+    }
+
+    /* Collect integer part */
+    while (isdigit(s[i++] = c = getchar()))
         ;
 
-    /* Collect fraction part if any */
+    /* Collect fractional part if present */
     if (c == '.') {
-        while (isdigit(s[i++] = c = getch()))
+        while (isdigit(s[i++] = c = getchar()))
             ;
     }
 
-    s[--i] = '\0';                      // back up one, overwrite last non-digit
+    s[--i] = '\0';
 
-    if (c != EOF)                       // Pushing back EOF will cause infinite loop
-        lastc = c;                     // Push back what's not part of the number 
-                                        // so it's ready for the next loop
-
-    /* Optional: if next char is letter, treat as variable */
-    if (isalpha(c))
-        return c;
+    if (c != EOF)
+        lastc = c;
 
     return NUMBER;
 }
@@ -185,6 +171,18 @@ int main(void) {
             case NUMBER:
                 push(atof(s));
                 break;
+
+            case VAR_ASSIGN: {
+                // We just read A= , the variable letter is still in s[0]
+                int var = s[0] - 'A';
+                if (sp > 0) {
+                    variables[var] = pop();
+                    printf("assigned %.8g to %c\n", variables[var], s[0]);
+                } else {
+                    printf("Stack is empty. No assignment made.\n");
+                }
+                break;
+            }
 
             case '+':
                 push(pop() + pop());
@@ -285,24 +283,13 @@ int main(void) {
 
             case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I':
             case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R':
-            case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+            case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z': {
 
-                int var = s[0] - 'A';
+                int var = type - 'A';
 
-                int x = getch();
-            
-                if (x == '=') { 
-                    if (sp > 0) {
-                        variables[var] = pop();
-                        printf("assigned %.8g to %c\n", variables[var], s[0]);
-                    } else {
-                        printf("Stack is empty. No assignment made.\n");
-                    }                         
-                } else {
-                    ungetch(x);
-                    push(variables[var]);
-                }
-            break; 
+                push(variables[var]);
+                break; 
+            }
 
             default:
                 printf("error: unknown command %c\n", type);
