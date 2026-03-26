@@ -162,9 +162,6 @@ int main(void) {
     printf("Enter expressions in RPN, press r to show result\n");   
     printf("Ctrl+C to quit\n\n");
 
-    //ungets("hello");
-    //printf("Testing ungets: should now read 'h','e','l','l','o'\n");
-
     while ((type = getop(s)) != EOF) {
         switch (type) {
             
