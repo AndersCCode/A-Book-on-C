@@ -1,54 +1,21 @@
 #include <stdio.h>
-#include <string.h>
-
-void reverse(char s[]) {
-    int c, i, j;
-
-    for (i = 0, j = strlen(s)-1; i < j; i++, j--) {
-        c = s[i];
-        s[i] = s[j];
-        s[j] = c;
-    }
-}
-
+#include <stdlib.h>
 
 void itoa(int n, char s[]) {
-    static int i;   // position in the string
+    static int i;           // position to the sting; persists across recursive calls 
 
-    if (n / 10)             // more digits left?
-        itoa(n / 10, s);
-    else {
-        
+    if (n / 10)             // as long as n / 10 > 1 (more digits left)
+        itoa(n / 10, s);    // recurse on the higher digits first
+    else {                  // base case: we've reached the highest digit
+        i = 0;              // reset index 
+        if (n < 0)
+            s[i++] = '-';
     }
 
+    s[i++] = abs(n) % 10 + '0'; // place current digit
+    s[i] = '\0';                // temporarily terminate; will be overwritten on unwind 
 }
 
-/* itoa: convert n to characters in s */
-/*void itoa(int n, char s[]) {
-    int i, sign;
-
-    if ((sign = n < 0))
-        n = -n;             // make n positive
-
-    i = 0;
-
-    do {
-        s[i++] = n % 10 + '0';  // Get next digit
-    } while ((n /= 10) > 0);    // delete it
-
-    if (sign < 0)
-        s[i++] = '-';
-
-    s[i] = '\0';
-
-    // === DEMO: see the raw characters === 
-    printf("Internal before reverse. n = %d:\n", n);  // note: n is now 0 here
-    for (int k = 0; s[k] != '\0'; k++)
-        printf("  s[%d] = %3d '%c'\n", k, s[k], s[k]);
-    // ==================================
-
-    reverse(s);
-}*/
 
 int main(void) {
 

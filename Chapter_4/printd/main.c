@@ -15,6 +15,11 @@ int main(void) {
     printf("\n%d\n", 123 / 10);
     printf("%d\n", 123 % 10);
     printf("%d\n", 1 % 10);
+    printf("%d\n", 1723 % 10);
+    printf("%d\n", 1723 % 10 + '0');
+
+    printf("%d\n", 1 % 10);
+    printf("%d\n", 17 % 10);
 
     return 0;
 }
