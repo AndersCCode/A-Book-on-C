@@ -11,14 +11,13 @@ void reverse(char s[])
 
     if (s[i] == '\0') {      // reached the end
         j = i - 1;           // j now points to last character 
-        i = 0;               // reset i for next call (if any)
+        i = 0;               // reset i for next call 
         return;
     }
 
-    i++;                     // move to next character 
-    reverse(s);              // recurse to the end
+    i++;                      
+    reverse(s);              
 
-    
     if (i < j) {             // only swap if i is still left of j
         char temp = s[i];
         s[i] = s[j];
@@ -37,6 +36,10 @@ int main(void)
     char buffer2[32] = "hello world";
     reverse(buffer2);
     printf("%s\n", buffer2);  
+
+    char buffer3[32] = "four";
+    reverse(buffer3);
+    printf("%s\n", buffer3);  
 
     return 0;
 }
