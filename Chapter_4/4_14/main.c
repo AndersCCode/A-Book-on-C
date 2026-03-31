@@ -10,6 +10,8 @@ void swap(t, x, y) {
 int main(void) {
     
     swap(t,x,y);
+
+    // Let's go!
     
     return 0;
 }
