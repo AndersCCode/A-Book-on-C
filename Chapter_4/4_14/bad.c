@@ -3,8 +3,12 @@ Block structure will help */
 
 #include <stdio.h>
 
-/* _temp to reduce risk of name clash with user variables */
-//#define swap(t, x, y) do { t _temp = (x); (x) = (y); (y) = _temp; } while (0) 
+/*  _temp to reduce risk of name clash with user variables 
+    #define swap(t, x, y) do { t _temp = (x); (x) = (y); (y) = _temp; } while (0) 
+    Leaving out do while will create syntax problem for if else (see below).    
+*/
+
+
 #define swap(t, x, y) { t _temp = (x); (x) = (y); (y) = _temp; } 
 
 int main(void) {

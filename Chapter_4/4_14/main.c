@@ -3,10 +3,12 @@ Block structure will help */
 
 #include <stdio.h>
 
-/* _temp to reduce risk of name clash with user variables
-do while executes only one time (false on first evaluation)
-() protects against side effects and operator precedence problems
- and also improve readability and clarity */
+/*  Block structure (do { ... } while (0)
+    _temp to reduce risk of name clash with user variables
+    do while executes only one time (false on first evaluation)
+    () protects against side effects and operator precedence problems
+    and also improve readability and clarity 
+    */
 
 
 #define swap(t, x, y) do { t _temp = (x); (x) = (y); (y) = _temp; } while (0) 
