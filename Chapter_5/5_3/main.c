@@ -1,8 +1,6 @@
 /* Write a pointer version of the function strcat that we showed in Chapter 2: strcat(s,t) copies the string t 
 to the end of s */
 
-/* Concatenate t to the end of s; s must be big enough */
-
 #include <stdio.h>
 
 #define MAXLEN 100
