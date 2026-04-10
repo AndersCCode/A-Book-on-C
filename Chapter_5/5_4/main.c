@@ -19,9 +19,9 @@ int strend(char *s, char *t) {
         t_end++;
     
     /* Compare */
-    while (t_end > t) {
-        if (s_end == s || *--s_end != *--t_end) {
-            return 0;
+    while (t_end > t) { /* As long as t_end is bigger than the start (as long as there is characters to compare)*/
+        if (s_end == s || *--s_end != *--t_end) {  /* s_end == s Have we compared all characters in s ? */
+            return 0;                              /* *--s_end != *--t_end no match */ 
         }
     }
     
