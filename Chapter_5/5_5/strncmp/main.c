@@ -6,29 +6,23 @@ characters of t to s. Full descriptions are in Appendix B. */
 
 #define MAXLEN 100
 
-int a_strncmp(char *s, const char *t, size_t n) {
-    const char *s_start = s;
-    const char *t_start = t;
+int a_strncmp(const char *s, const char *t, size_t n) {
 
-     /* find end of s */
-    while (*s)                
+    // compare n charachters to s   
+    while (n > 0 && *s != '\0' && *t != '\0') {     // Alternative version: while (n > 0 && *s && *t)
+        if (*s != *t)
+            return *s - *t;
+        
         s++;
-
-    /* append n charachters to s */    
-    while (n > 0 && *t != '\0') {
-        *s++ = *t++;
+        t++;
         n--;
     }
-    *s = '\0';      /* Terminate */
 
-    return s_start;
+    // If we get here, either n reached 0 or one string ended
+    if (n == 0)                  // Compared all characters, all equal 
+        return 0;               
 
-    /* Compare */
-    while (*s != '\0' && *t != '\0' && n > 0) { /* As long as t_end is bigger than the start (as long as there is characters to compare)*/
-        if (*--s != *--t) {  /* s_end == s Have we compared all characters in s ? */
-            return ;                              /* *--s_end != *--t_end no match */ 
-        }
-    }
+    return *s - *t;             // One string ended, the other didn't
 }
 
 int main(void) {
@@ -36,13 +30,20 @@ int main(void) {
     char x[MAXLEN] = "abc";
     char y[MAXLEN] = "abc";
 
-    int res = a_strncmp(goal, source, 2);
+    int res = a_strncmp(x, y, 5);
 
     if (res == 0) 
         printf("x = y\n");
-    else if (res <0)
+    else if (res < 0)
         printf("x < y\n");
     else printf("x > y\n");
+
+    printf("Result 1: %d\n", a_strncmp("abc", "abd", 3));     
+    printf("Result 2: %d\n", a_strncmp("abc", "ab",  4));     
+    printf("Result 3: %d\n", a_strncmp("abc", "abcd", 4));    
+    printf("Result 4: %d\n", a_strncmp("abc", "abc",  5));    
+    printf("Result 5: %d\n", a_strncmp("abc", "abc",  2));    
+    printf("Result 6: %d\n", a_strncmp("", "a", 1));          
 
     return 0;
 }
