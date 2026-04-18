@@ -19,6 +19,7 @@ double val[MAXVAL];     /* stack of values */
 double *sp = val;             /* stack pointer */
 
 double variables[MAXVAR] = {0.0}; /* Array for variables initialized to 0 */
+double *vp = variables;
 double last_printed = 0.0;
  
 /* push f onto value stack */
@@ -42,7 +43,7 @@ double pop(void) {
 
 void duplicate_top(void) {
     if (sp > val) {
-        push(*--sp)          
+        push(*--sp);          
     } else {
         printf("duplicate error: value stack empty\n");
     }
@@ -63,13 +64,10 @@ void print_value_stack(void) {
         return;
     }
     
-    printf("Value stack (%g elements):\n", sp - 1 - val);
+    printf("Value stack bottom --> top (%g elements):\n", sp - 1 - val);
     
-    for (double *p = val; p < sp; p++) {
-
-        int i = p - val;
-
-        printf("  %s[%d] = %.8g\n", (p == sp-1) ? "top→ " : "     ", i, *p);
+    for (double *p = val; p < sp; p++) {    // use a temporary pointer p
+        printf("  %s%.8g\n", (p == sp - 1) ? "top→ " : "     ", *p);
     }
 }
 
