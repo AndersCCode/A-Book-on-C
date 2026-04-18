@@ -15,24 +15,25 @@ reverse (Chapter 3), and strindex and getop (Chapter 4). */
 #define VAR_ASSIGN '='
 
 /* external variables */
-int sp = 0;             /* stack pointer */
 double val[MAXVAL];     /* stack of values */
+double *sp = val;             /* stack pointer */
 
 double variables[MAXVAR] = {0.0}; /* Array for variables initialized to 0 */
 double last_printed = 0.0;
  
 /* push f onto value stack */
 void push(double f) {
-    if (sp < MAXVAL)
-        val[sp++] = f;
+    if (sp < val + MAXVAL) {
+        *sp++ = f;
+    }
     else 
         printf("error: stack full, can't push %g\n", f);
 }
 
 /* pop and return top value from value stack */
 double pop(void) {
-    if (sp > 0)
-        return val[--sp]; // decrement first (sp-1), then read the new sp
+    if (sp > val)
+        return *--sp; // decrement first, then read the new sp
     else {
         printf("pop error: value stack empty \n");
         return 0.0;
@@ -40,30 +41,36 @@ double pop(void) {
 }
 
 void duplicate_top(void) {
-    if (sp > 0) {
-        push(val[sp-1]);          
+    if (sp > val) {
+        push(*--sp)          
     } else {
         printf("duplicate error: value stack empty\n");
     }
 }
 
 void print_top_of_stack(void) {
-    if (sp > 0)
-        printf("Top stack element is: %.8g\n", val[sp-1]);
+    if (sp > val)
+        printf("Top stack element is: %.8g\n", *--sp);
     else {
         printf("print top of stack error: value stack empty \n");
     }
 }
 
 void print_value_stack(void) {
-    if (sp == 0) {
+    
+    if (sp == val) {
         printf("print stack error: value stack empty \n");
         return;
     }
     
-    printf("Value stack (%d elements):\n", sp);
-    for (int i = sp - 1; i >= 0; i--) 
-        printf("  %s[%d] = %.8g\n", (i == sp-1) ? "top→ " : "     ", i, val[i]);
+    printf("Value stack (%g elements):\n", sp - 1 - val);
+    
+    for (double *p = val; p < sp; p++) {
+
+        int i = p - val;
+
+        printf("  %s[%d] = %.8g\n", (p == sp-1) ? "top→ " : "     ", i, *p);
+    }
 }
 
 void print_variables(void) {
