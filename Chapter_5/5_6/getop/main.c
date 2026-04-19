@@ -43,7 +43,7 @@ double pop(void) {
 
 void duplicate_top(void) {
     if (sp > val) {
-        push(*--sp);          
+        push(*(sp - 1));          
     } else {
         printf("duplicate error: value stack empty\n");
     }
@@ -51,7 +51,7 @@ void duplicate_top(void) {
 
 void print_top_of_stack(void) {
     if (sp > val)
-        printf("Top stack element is: %.8g\n", *--sp);
+        printf("Top stack element is: %.8g\n", *(sp - 1));
     else {
         printf("print top of stack error: value stack empty \n");
     }
@@ -64,7 +64,7 @@ void print_value_stack(void) {
         return;
     }
     
-    printf("Value stack bottom --> top (%g elements):\n", sp - 1 - val);
+    printf("Value stack bottom --> top (%ld elements):\n", sp - val);
     
     for (double *p = val; p < sp; p++) {    // use a temporary pointer p
         printf("  %s%.8g\n", (p == sp - 1) ? "top→ " : "     ", *p);
@@ -72,8 +72,12 @@ void print_value_stack(void) {
 }
 
 void print_variables(void) {
-    for (int i = 0; i < MAXVAR; i++)
-        printf("%c = %g%c", 'A' + i, variables[i], (i%10==9 || i == MAXVAR-1) ? '\n' : ' ');  
+
+    int i = 0;
+
+    for (double *p = variables; p < variables + MAXVAR; p++, i++) {
+        printf("%c = %g%c", 'A' + i, *p, (i%10==9 || i == MAXVAR-1) ? '\n' : ' ');  
+    }
 }
 
 /* get next operator, numeric operand or variable letter 
@@ -82,8 +86,8 @@ void print_variables(void) {
     the character   if it's an operator (+ - * / % etc.) 
     a letter        if it's a variable name (A-Z)
     */
-int getop(char s[]) {
-    int i, c;
+int getop(char *s) {
+    int c;
     static int lastc = EOF;
 
     /* Get first non-whitespace character, using static pushback if present */
@@ -100,15 +104,13 @@ int getop(char s[]) {
     }
 
     if (c == EOF) {
-        s[0] = '\0';
+        *s = '\0';
         return EOF;
     }
 
-    s[0] = c;
-    s[1] = '\0';
+    *s++ = c;
+    *s = '\0';
     
-    i = 0;
-
     /* Variable handling: A or A= */
     if (isupper(c)) {
         int next = getchar();
@@ -123,31 +125,30 @@ int getop(char s[]) {
 
     /* Number or operator handling */
     if (c == '-') {
-        s[i++] = '-';
-        c = getchar();
-        if (!isdigit(c) && c != '.') {
-            if (c != EOF)
-                lastc = c;
+        int next = getchar();
+        
+        if (!isdigit(next) && next != '.') {
+            if (next != EOF) lastc = next;
             return '-';
-        }
-        s[i++] = c;
-    } else if (isdigit(c) || c == '.') {
-        s[i++] = c;
-    } else {
-        return c;                   // operator or other single char
+        } 
+        *s++ = next;        // write the first digit after the minus
+        c = next;
+    }
+    else if (!isdigit(c) && c != '.') {
+        return c;       // operator
     }
 
     /* Collect integer part */
-    while (isdigit(s[i++] = c = getchar()))
+    while (isdigit(*s++ = c = getchar()))
         ;
 
     /* Collect fractional part if present */
     if (c == '.') {
-        while (isdigit(s[i++] = c = getchar()))
+        while (isdigit(*s++ = c = getchar()))
             ;
     }
 
-    s[--i] = '\0';
+    *s-- = '\0';
 
     if (c != EOF)
         lastc = c;
@@ -177,8 +178,8 @@ int main(void) {
 
             case VAR_ASSIGN: {
                 // We just read A= , the variable letter is still in s[0]
-                int var = s[0] - 'A';
-                if (sp > 0) {
+                int var = *s - 'A';
+                if (sp > val) {
                     variables[var] = pop();
                     printf("assigned %.8g to %c\n", variables[var], s[0]);
                 } else {
@@ -214,7 +215,7 @@ int main(void) {
                 break;
 
             case 'n':
-                if (sp == 1) {
+                if (sp == val + 1) {
                     push(sin(pop()));
                 }
                 else {
@@ -223,7 +224,7 @@ int main(void) {
                 break;
 
             case 'w':
-                if (sp >= 2) {
+                if (sp >= val + 2) {
                     double op2 = pop(); // Exponent comes first. Was pushed last
                     double op1 = pop(); // Base
 
@@ -234,7 +235,7 @@ int main(void) {
                 }
                 break;
             case 'e':
-                if (sp == 1) {
+                if (sp == val + 1) {
                     push(exp(pop()));
                 }
                 else {
@@ -254,7 +255,7 @@ int main(void) {
                 print_variables();
                 break;
             case 'r':
-                if (sp > 0) {
+                if (sp > val) {
                     last_printed = pop();
                     printf("Result:\t%.8g\n", last_printed); 
                 } else {
@@ -265,22 +266,22 @@ int main(void) {
                 printf("Last printed:\t%.8g\n", last_printed); 
                 break;
             case 'i':
-                printf("Stackpointer (next position to push) = %d\n", sp); 
+                printf("Stackpointer (next position to push) = %p (index %d)\n", (void*)sp, (int)(sp - val)); 
                 break;   
             case 'd':
                 duplicate_top();
                 break;  
             case 's':
-                if (sp >= 2) {
-                    double temp = val[sp-1];
-                    val[sp-1] = val[sp-2];
-                    val[sp-2] = temp;
+                if (sp >= val + 2) {
+                    double temp = *(sp-1);
+                    *(sp-1) = *(sp-2);
+                    *(sp-2) = temp;
                 } else {
                     printf("swap error: need at least two elements\n");
                 }
                 break;
             case 'c':
-                sp = 0;
+                sp = 0;  //val
                 printf("Stack cleared\n");
                 break;
 
