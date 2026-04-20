@@ -5,12 +5,24 @@ How much faster is the program ? */
 #include <stdio.h>
 #include <string.h>
 
-#define MAXLINES 5000       // max number of lines to be sorted
-#define MAXLEN 1000         // max length of any input line
-#define MAXSTORAGE 10000    // size of the storage array
+#define MAXLEN 1000
+#define MAXLINES 5000
+#define ALLOCSIZE 10000             // size of available space
 
-char *lineptr[MAXLINES];    // pointers to the lines 
-char linebuf[MAXSTORAGE];   // array supplied by main (differs from pre-version that uses malloc)
+char *lineptr[MAXLINES];            
+
+static char allocbuf[ALLOCSIZE];    // storage for alloc
+static char *allocp = allocbuf;     // next free position
+
+/* return pointer to n characters */
+char *alloc(int n) 
+{
+    if (allocbuf + ALLOCSIZE - allocp >= n) {   // it fits
+        allocp += n;
+        return allocp - n;      // old p
+    } else                      // not enough room
+        return 0;
+}
 
 /* Read a line into s, return length */
 int get_line(char *s, int lim) 
@@ -63,21 +75,22 @@ void qsort(char *v[], int left, int right)
 }
 
 /* read input lines */
-int readlines(char *lineptr[], char *linebuf, int maxlines, int maxstorage) 
+int readlines(char *lineptr[], int maxlines) 
 {
-    int len, nlines = 0;
-    char *p = linebuf;              // next free position in linebuf
-    char line[MAXLEN];
-    
-    while ((len = get_line(line, MAXLEN)) > 0) {
-        if (nlines >= maxlines || p + len > linebuf + maxstorage)
-            return -1;
+    int len, nlines;
+    char *p, line[MAXLEN];
+
+    nlines = 0;
+
+    while ((len = get_line(line, MAXLEN)) > 0) 
         
-        line[len-1] = '\0';         // delete newline
-        strcpy(p, line);            // copy the line into the array (buffer)
-        lineptr[nlines++] = p;      // store pointer to this line
-        p += len;                   // move forward in the array (buffer)
-    }
+        if (nlines >= maxlines || (p = alloc(len)) == NULL)
+            return -1;
+        else {
+            line[len-1] = '\0';         // delete newline
+            strcpy(p, line);
+            lineptr[nlines++] = p;
+        }
     return nlines;
 }
 
@@ -91,8 +104,8 @@ int main(void)
 {
     int nlines;         // number of input lines read
 
-    if ((nlines = readlines(lineptr, linebuf, MAXLINES, MAXSTORAGE)) >= 0) {
-        qsort(lineptr, 0, nlines - 1);    
+    if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
+        qsort(lineptr, 0, nlines-1);
         printf("\nSorted lines:\n");
         writelines(lineptr, nlines);
         return 0;
