@@ -1,13 +1,35 @@
 /* Rewrite readliness to store lines in an array supplied by main 
 rather thatn calling alloc to maintain storage. 
-How much faster is the program ? */
+How much faster is the program ? 
+
+# Generate 1000 lines for testing
+for i in {1..1000}; do echo "This is line number $i with some text to make it longer"; done > big_input.txt
+
+gcc main.c -o main && ./main < big_input.txt
+
+Result: 1000 lines in 0.0010 seconds
+
+Alloc version = 0.0014 seconds
+Array version = 0.0010 seconds
+----------------------------------
+Difference = 0.0004 seconds (29%)
+
+Result: 3000 lines in 0.0035 seconds
+
+Alloc version = 0.0039 seconds
+Array version = 0.0035 seconds
+----------------------------------
+Difference = 0.0004 seconds (29%)
+
+*/
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
-#define MAXLINES 5000       // max number of lines to be sorted
-#define MAXLEN 1000         // max length of any input line
-#define MAXSTORAGE 10000    // size of the storage array
+#define MAXLINES 10000       // max number of lines to be sorted
+#define MAXLEN 10000         // max length of any input line
+#define MAXSTORAGE 1000000    // size of the storage array
 
 char *lineptr[MAXLINES];    // pointers to the lines 
 char linebuf[MAXSTORAGE];   // array supplied by main (differs from pre-version that uses malloc)
@@ -91,13 +113,24 @@ int main(void)
 {
     int nlines;         // number of input lines read
 
+    clock_t start, end;
+    double cpu_time_used;
+
+    start = clock();    // start timing
+
     if ((nlines = readlines(lineptr, linebuf, MAXLINES, MAXSTORAGE)) >= 0) {
         qsort(lineptr, 0, nlines - 1);    
         printf("\nSorted lines:\n");
         writelines(lineptr, nlines);
+
+        end = clock();
+        cpu_time_used = ((double)(end - start) / CLOCKS_PER_SEC);
+
+        printf("\nTime taken: %.4f seconds\n", cpu_time_used);
+
         return 0;
     } else {
         printf("error: input too big to sort\n");
         return 1;
-    }
+    } 
 }

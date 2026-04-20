@@ -1,13 +1,21 @@
 /* Rewrite readliness to store lines in an array supplied by main 
 rather thatn calling alloc to maintain storage. 
-How much faster is the program ? */
+How much faster is the program ? 
+
+gcc main.c -o main && ./main < big_input.txt
+
+Result: 1000 lines 0.0014 seconds
+Result: 3000 lines 0.0039 seconds
+
+*/
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
-#define MAXLEN 1000
-#define MAXLINES 5000
-#define ALLOCSIZE 10000             // size of available space
+#define MAXLEN 10000
+#define MAXLINES 10000
+#define ALLOCSIZE 1000000            // size of available space 
 
 char *lineptr[MAXLINES];            
 
@@ -82,7 +90,7 @@ int readlines(char *lineptr[], int maxlines)
 
     nlines = 0;
 
-    while ((len = get_line(line, MAXLEN)) > 0) 
+    while ((len = get_line(line, MAXLEN)) > 0) {
         
         if (nlines >= maxlines || (p = alloc(len)) == NULL)
             return -1;
@@ -91,6 +99,7 @@ int readlines(char *lineptr[], int maxlines)
             strcpy(p, line);
             lineptr[nlines++] = p;
         }
+    }
     return nlines;
 }
 
@@ -104,10 +113,21 @@ int main(void)
 {
     int nlines;         // number of input lines read
 
+    clock_t start, end;
+    double cpu_time_used;
+
+    start = clock();    // start timing
+
     if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
         qsort(lineptr, 0, nlines-1);
         printf("\nSorted lines:\n");
         writelines(lineptr, nlines);
+
+        end = clock();
+        cpu_time_used = ((double)(end - start) / CLOCKS_PER_SEC);
+
+        printf("\nTime taken: %.4f seconds\n", cpu_time_used);
+
         return 0;
     } else {
         printf("error: input too big to sort\n");
