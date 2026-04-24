@@ -56,6 +56,7 @@ void month_day(int year, int yearday, int *pmonth, int *pday) {
     if (pmonth == NULL || pday == NULL) {
         printf("Error: NULL pointer passed to pmonth or pday\n");
         return;
+    }
 
     if (year <= 0) {
         printf("Error: invalid year %d\n", year);
@@ -89,20 +90,25 @@ int main(void) {
 
     int month, day;
 
+    printf("\nDay of Year\n");
+    printf("-----------\n");
     printf("2018-06-31 = day %d\n", day_of_year(2018, 6, 30));
     printf("2026-04-22 = day %d\n\n", day_of_year(2026, 4, 22));
     
     printf("Test of invalid dates\n");
+    printf("---------------------\n");
     day_of_year(2026, 4, 31);       // April 31
     day_of_year(2026, 6, 31);       // June 31
     day_of_year(2026, 2, 29);       // February 29
 
+    printf("\nWhich day was it?\n");
+    printf("-----------------\n");
     month_day(2026, 222, &month, &day);
 
-    if (month == -1) {
+    if (month == -1) 
         printf("Invalid yearday\n");
-    } else 
-        printf("Day 222 in 2025 was month %d and day %d\n", month, day);
+    else 
+        printf("Day 222 in 2025 was month %d and day %d\n\n", month, day);
 
     return 0;
 }
