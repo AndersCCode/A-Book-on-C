@@ -13,7 +13,8 @@ static char daytab[2][13] = {
 365 or 366 = Dec 31 */
 
 int day_of_year(int year, int month, int day) {
-    int i, leap;
+    int leap;
+    char *p;
 
     if (year <= 0) {
         printf("Error: invalid year %d\n", year);
@@ -35,24 +36,33 @@ int day_of_year(int year, int month, int day) {
      OR it is evenly divisible by 400 (special century years 2000, 2400, 2800...) */
     leap = (year%4 == 0 && year%100 != 0) || (year%400 == 0);  
 
+    // Select the corret row. Note that p is of type pointer so p will point to 
+    // the first element of the chosen row.
+    p = *(daytab + leap);
+
     // Key check to reject April 31, June 31, Februrary 30, etc.
     if (day > daytab[leap][month]) {
         printf("Error: invalid date %d-%02d-%02d \n"
                         "(month %d has only %d days)\n",
-                        year, month, day, month, daytab[leap][month]);
+                        year, month, day, month, *(p + month));  
         return -1;
     }
 
     // Add up all the days from previous months
-    for (i = 1; i < month; i++)
-        day += daytab[leap][i];
+    for (int i = 1; i < month; i++) {
+        day += *p;
+        p++; 
+    }
     
     return day;     // return the total
 }
 
 /* Given a year and a day-of-the-year (e.g. 222) it calculates which month and day it is */
 void month_day(int year, int yearday, int *pmonth, int *pday) {
-    int i, leap;
+    int leap;
+    int i;
+
+    char *p;
 
     if (pmonth == NULL || pday == NULL) {
         printf("Error: NULL pointer passed to pmonth or pday\n");
@@ -71,6 +81,10 @@ void month_day(int year, int yearday, int *pmonth, int *pday) {
      OR it is evenly divisible by 400 (special century years 2000, 2400, 2800...) */
     leap = year%4 == 0 && year%100 != 0 || year%400 == 0;
 
+     // Select the corret row. Note that p is of type pointer so p will point to 
+    // the first element of the chosen row.
+    p = *(daytab + leap);
+
     int maxdays = leap ? 366 : 365;
 
     if (yearday < 1 || yearday > maxdays) {
@@ -80,8 +94,8 @@ void month_day(int year, int yearday, int *pmonth, int *pday) {
         return;
     }
 
-    for (i = 1; yearday > daytab[leap][i]; i++)
-        yearday -= daytab[leap][i];
+    for (i = 1; yearday > *(p + i); i++) 
+        yearday -= *(p + i);
     
     *pmonth = i;
     *pday = yearday;
