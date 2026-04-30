@@ -49,6 +49,8 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         
         char *arg = argv[i];
+
+        printf("%s\n, *arg");
  
         if (isalnum(*arg)) {
             push(*arg);
