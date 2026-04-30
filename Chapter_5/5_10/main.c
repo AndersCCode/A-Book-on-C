@@ -57,27 +57,24 @@ int main(int argc, char *argv[]) {
         } else if (*arg == '+' || *arg == '-' || *arg == '*' || *arg == '/') {
             switch (*arg) {
                 case '+':
+                    printf("=\n");
                     printf("%g\n", pop() + pop());
                     break;
                 case '*':
-                    push(pop() * pop());
+                    printf("=\n");
+                    printf("%g\n", (pop() * pop()));
                     break;
                 case '-': // order of operands is important
                     op2 = pop();
-                    push(pop() - op2);
+                    printf("=\n");
+                    printf("%g\n", pop() - op2);
                     break;
                 case '/': // order of operands is important
                     op2 = pop();
-                    if (op2 != 0.0)
-                        push(pop() / op2);
-                    else 
-                        printf("error: zero divisor\n");
-                    break;
-                case '%': // order of operands is important
-                    op2 = pop();
-                    if (op2 != 0.0)
-                        push((int)pop() % (int)op2);  // % only support int
-                        //push(fmod(pop(), op2)); // fmod has however support for float. Kräver -lm vid kompilering
+                    if (op2 != 0.0) {
+                        printf("=\n");
+                        printf("%g\n", pop() / op2);
+                    }
                     else 
                         printf("error: zero divisor\n");
                     break;
