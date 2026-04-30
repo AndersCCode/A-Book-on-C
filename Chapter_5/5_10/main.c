@@ -49,30 +49,26 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         
         char *arg = argv[i];
-
-        printf("%s\n", arg);
  
         if (isalnum(*arg)) {
-            push(atoi(arg));
-        } else if (*arg == '+' || *arg == '-' || *arg == '*' || *arg == '/') {
-            switch (*arg) {
+            push(atof(arg));
+        } else if (strlen(arg) == 1) {
+            char op = arg[0];
+
+            switch (op) {
                 case '+':
-                    printf("=\n");
                     printf("%g\n", pop() + pop());
                     break;
                 case '*':
-                    printf("=\n");
                     printf("%g\n", (pop() * pop()));
                     break;
                 case '-': // order of operands is important
                     op2 = pop();
-                    printf("=\n");
                     printf("%g\n", pop() - op2);
                     break;
                 case '/': // order of operands is important
                     op2 = pop();
                     if (op2 != 0.0) {
-                        printf("=\n");
                         printf("%g\n", pop() / op2);
                     }
                     else 
