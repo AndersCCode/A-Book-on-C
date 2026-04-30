@@ -50,10 +50,10 @@ int main(int argc, char *argv[]) {
         
         char *arg = argv[i];
 
-        printf("%s\n, *arg");
+        printf("%s\n", arg);
  
         if (isalnum(*arg)) {
-            push(*arg);
+            push(atoi(arg));
         } else if (*arg == '+' || *arg == '-' || *arg == '*' || *arg == '/') {
             switch (*arg) {
                 case '+':
