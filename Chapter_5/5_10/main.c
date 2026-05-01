@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     double op2;
 
     if (argc < 2) {
-        printf("Usage: expression \n");
+        printf("Usage: ./expr expression...\n");
         
         return 1;
     }
@@ -50,36 +50,47 @@ int main(int argc, char *argv[]) {
         
         char *arg = argv[i];
  
-        if (isalnum(*arg)) {
+        if (isdigit(*arg) || 
+            (*arg == '-' && isdigit(arg[1])) || // -5, -3.14 etc.
+            (*arg == '+' && isdigit(arg[1])) || // +5
+            (*arg == '.' && isdigit(arg[1]))) { // .5 (but not -.5 or +.5 use --> -0.5 or +0.5 instead)
             push(atof(arg));
-        } else if (strlen(arg) == 1) {
-            char op = arg[0];
-
-            switch (op) {
+        } 
+        else if (strlen(arg) == 1) {
+            switch (arg[0]) {
                 case '+':
-                    printf("%g\n", pop() + pop());
+                    push(pop() + pop());
                     break;
                 case '*':
-                    printf("%g\n", (pop() * pop()));
+                    push(pop() * pop());
                     break;
                 case '-': // order of operands is important
                     op2 = pop();
-                    printf("%g\n", pop() - op2);
+                    push(pop() - op2);
                     break;
                 case '/': // order of operands is important
                     op2 = pop();
                     if (op2 != 0.0) {
-                        printf("%g\n", pop() / op2);
+                        push(pop() / op2);
                     }
                     else 
                         printf("error: zero divisor\n");
                     break;
                 default:
-                    printf("error: unknown command %s\n", *argv);
+                    printf("error: unknown command %s\n", arg);
                     break;            
             }
         }
     }
+
+    // Final result
+    if (sp == 1)
+        printf("%g\n", pop());
+    else if (sp > 1) 
+        printf("error: %d items left on stack\n", sp);
+    else 
+        printf("Stack is empty\n");
+
 return 0;
 }
 
