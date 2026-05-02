@@ -1,65 +1,79 @@
-/*  Modify the programs entab and detab (written as exercises in Chapter 1) to accept 
-a list of tab stops as arguments. Use the default tab settings if there are no arguments. 
-
-This is the detab program (remove tabs from input and ajust text to tab stops) */
-
+/* detab - replace tabs with proper spaces, accepting tab stops as arguments */
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TABSTOP 4   // Tab stops every TABSTOP columnns
+#define DEFAULT_TABSTOP 4
+#define MAX_STOPS 10
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
+    int c, column = 0;
+    int tabstops[MAX_STOPS];
+    int n_tabstops = 0;
 
-    int c, column = 0;      // current position on the line
-    int tabstops[100];      // array to hold the tab stop positions
-    int n_tabstops = 0;     // count for how many tab stops we have
-
-
-    for (int i = 1; i < argc; i++) {
-            tabstops[n_tabstops++] = atoi(argv[i]);   // convert the argument to number                    
-        }
-
-    // if no arguments is given, use default
-    if (n_tabstops == 0) {
-        tabstops[0] = TABSTOP;
-        n_tabstops = 1;
-        printf("Tab stops set to %d\n", TABSTOP);
+    // Read tab stops from command-line arguments 
+    for (int i = 1; i < argc && n_tabstops < MAX_STOPS; i++) {
+        tabstops[n_tabstops++] = atoi(argv[i]);
     }
 
+    // Use default if no arguments given 
+    if (n_tabstops == 0) {
+        tabstops[0] = DEFAULT_TABSTOP;
+        n_tabstops = 1;
+    }
+
+    // Print ruler
+    int max_col = 60;
+
+    // Line 1: Tab stop markers 
+    for (int col = 0; col <= max_col; col++) {
+        int is_stop = 0;
+        for (int i = 0; i < n_tabstops; i++) {
+            if (col == tabstops[i]) {
+                is_stop = 1;
+                break;
+            }
+        }
+        putchar(is_stop ? '|' : '-');
+    }
+    putchar('\n');
+
+    // Line 2: Column numbers 
+    for (int col = 0; col <= max_col; col += 5) {
+        printf("%-5d", col);
+    }
+    printf("\n\n");
+
+    // Main detab processing
     while ((c = getchar()) != EOF) {
         if (c == '\t') {
-
-            // Find the next tab stop after current column
+            /* Find next tab stop after current column */
             int next_stop = 0;
-
             for (int i = 0; i < n_tabstops; i++) {
                 if (column < tabstops[i]) {
                     next_stop = tabstops[i];
                     break;
                 }
             }
-
-            // If no future tab stop found, continue with default spacing
             if (next_stop == 0) {
-                next_stop = column + TABSTOP;
-            } 
+                next_stop = column + DEFAULT_TABSTOP;   /* fallback */
+            }
 
-            int spaces = next_stop - column;
-
-            for (int i = 0; i < spaces; i++) {
+            // Output spaces 
+            for (int i = 0; i < (next_stop - column); i++) {
                 putchar(' ');
             }
-            column += spaces;
-
-        } else if (c == '\n') {
+            column = next_stop;
+        }
+        else if (c == '\n') {
             putchar('\n');
             column = 0;
-        } else {
+        }
+        else {
             putchar(c);
-            ++column;
+            column++;
         }
     }
+
     return 0;
 }
-
-
