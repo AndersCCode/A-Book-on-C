@@ -1,26 +1,9 @@
-/* Write a program entab that replaces strings of blanks by the 
-minimum number of tabs and blanks to achieve the same spacing. 
-Use the same tab stops as for detab. 
+/* Modify the programs entab and detab (written as exercises in Chapter 1) 
+to accept a list of tab stops as arguments. Use the default tab settings 
+if there are no arguments. 
 
-When either a tab or a single blank would suffice to reach 
-a tab stop, which should be given preference ? 
-
-Prefer the tab. 
-    + Fewer characters overall. More efficient (one byte can replace up to 7-8 spaces).
-    + Matches the spirit of the exercise (minimum number of tabs and blanks).
-    + Aligns with the philosophy of being consistent with historical tools.
-    + Smaller output files in cases with lots of whitespaces.
-
-entab - Replace spaces with tabs 
-
-
-Strategy 
-1. Track current position.
-2. When you hit a run of spaces, calculate how many full tabs + reminder spaces fit.
-3. When remainder == distance to next tab stop (i.e., one character needed), 
-emit \t instead of ' '.
-
-*/
+entab - replace strings of blanks by the minimum number of tabs and blanks
+to achieve the same spacing. */
 
 #include <stdio.h>
 

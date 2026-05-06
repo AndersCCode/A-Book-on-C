@@ -1,4 +1,9 @@
-/* detab - replace tabs with proper spaces, accepting tab stops as arguments */
+/* Modify the programs entab and detab (written as exercises in Chapter 1) 
+to accept a list of tab stops as arguments. Use the default tab settings 
+if there are no arguments.
+
+detab - replace tabs with proper spaces, accepting tab stops as arguments */
+
 #include <stdio.h>
 #include <stdlib.h>
 
