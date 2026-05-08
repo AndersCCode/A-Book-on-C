@@ -39,7 +39,8 @@ void entab(char s[], int len) {
         }
     }
     // trailing spaces
-    while (spaces >= TABSTOP) { buffer[j++] = '\t'; spaces -= TABSTOP; }
+    while (spaces >= TABSTOP) 
+        { buffer[j++] = '\t'; spaces -= TABSTOP; }
     while (spaces > 0)        { buffer[j++] = ' '; --spaces; }
 
     buffer[j] = '\0';
