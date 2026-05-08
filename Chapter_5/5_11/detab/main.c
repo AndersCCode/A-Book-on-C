@@ -2,12 +2,12 @@
 to accept a list of tab stops as arguments. Use the default tab settings 
 if there are no arguments.
 
-detab - replace tabs with proper spaces, accepting tab stops as arguments */
+detab - replace tabs with proper spaces, accepting tab stops (positions) as arguments */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEFAULT_TABSTOP 4
+#define DEFAULT_TABSTOP 8
 #define MAX_STOPS 10
 
 int main(int argc, char *argv[])

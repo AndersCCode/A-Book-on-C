@@ -3,13 +3,12 @@ to accept a list of tab stops as arguments. Use the default tab settings
 if there are no arguments. 
 
 entab - replace strings of blanks by the minimum number of tabs and blanks
-to achieve the same spacing. */
+to achieve the same spacing. 
 
-
-
-// test
+i.e. 9 spaces should be translated to 1 tab and 1 space */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MAXLINE 1000
 #define DEFAULT_TAB 8
