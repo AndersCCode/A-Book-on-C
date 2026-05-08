@@ -8,49 +8,67 @@ to achieve the same spacing. */
 #include <stdio.h>
 
 #define MAXLINE 1000
-#define TABSTOP 8
+#define DEFAULT_TAB 8
 
 int mygetline(char s[], int lim) {
     int c, i = 0;
     while (i < lim-1 && (c = getchar()) != EOF && c != '\n')
         s[i++] = c;
-    if (c == '\n') s[i++] = '\n';
+    if (c == '\n')
+        s[i++] = '\n';
     s[i] = '\0';
     return i;
 }
 
-void entab(char s[], int len) {
-    char buffer[MAXLINE];
-    int i, j = 0, spaces = 0;
+/* entab: replace strings of blanks with tabs + blanks */
+void entab(char s[], int len, int tabstop) {
+    int i, pos = 0;           // current column position
 
     for (i = 0; i < len; ++i) {
         if (s[i] == ' ') {
-            ++spaces;
-        } else {
-            while (spaces >= TABSTOP) {
-                buffer[j++] = '\t';
-                spaces -= TABSTOP;
+            ++pos;
+            // Check if we hit a tab stop
+            if (pos % tabstop == 0) {
+                putchar('\t');
+                pos = 0;        // reset after tab
             }
-            while (spaces > 0) {
-                buffer[j++] = ' ';
-                --spaces;
+        } 
+        else {
+            // Output any pending spaces that didn't reach tab stop
+            while (pos > 0) {
+                putchar(' ');
+                --pos;
             }
-            buffer[j++] = s[i];
+            putchar(s[i]);
+            if (s[i] == '\t')
+                pos = 0;                    // tab resets position
+            else if (s[i] == '\n')
+                pos = 0;
+            else
+                pos++;
         }
     }
-    // trailing spaces
-    while (spaces >= TABSTOP) 
-        { buffer[j++] = '\t'; spaces -= TABSTOP; }
-    while (spaces > 0)        { buffer[j++] = ' '; --spaces; }
 
-    buffer[j] = '\0';
-    printf("%s", buffer);
+    // trailing spaces at end of line
+    while (pos > 0) {
+        putchar(' ');
+        --pos;
+    }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     char line[MAXLINE];
     int len;
+    int tabstop = DEFAULT_TAB;
+
+    // TODO: parse command line arguments for tab stops
+    if (argc > 1) {
+        tabstop = atoi(argv[1]);   // simple case: first arg = tabstop
+        if (tabstop <= 0) tabstop = DEFAULT_TAB;
+    }
+
     while ((len = mygetline(line, MAXLINE)) > 0)
-        entab(line, len);
+        entab(line, len, tabstop);
+
     return 0;
 }
