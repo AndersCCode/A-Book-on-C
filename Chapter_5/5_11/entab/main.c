@@ -5,6 +5,10 @@ if there are no arguments.
 entab - replace strings of blanks by the minimum number of tabs and blanks
 to achieve the same spacing. */
 
+
+
+// test
+
 #include <stdio.h>
 
 #define MAXLINE 1000
