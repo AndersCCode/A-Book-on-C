@@ -10,8 +10,6 @@ detab - replace tabs with proper spaces, accepting tab stops (positions) as argu
 #define MAXLINE    1000
 #define DEFAULT_TAB 8
 
-// ttt
-
 /* detab: replace tabs with the proper number of spaces */
 void detab(int tabstop)
 {
