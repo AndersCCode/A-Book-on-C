@@ -17,6 +17,7 @@ i.e. 9 spaces should be translated to 1 tab and 1 space */
 #define MAXSTOPS 1000
 #define TABINC   8
 
+// If I'm currently in column col, what column will a tab take me to?
 static int nextstop(int col, const int *stops, int nstops) {
     for (int i = 0; i < nstops; i++)
         if (stops[i] > col) return stops[i];
