@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
         
         int v = atoi(argv[i]);  // Read argument
 
-        if (v > 0) {    // Only valid characters ()
+        if (v > 0) {    // Only valid characters 
 
             int col = v - 1; /* convert to 0-based */
 

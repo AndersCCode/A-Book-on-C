@@ -2,51 +2,72 @@
 to accept a list of tab stops as arguments. Use the default tab settings 
 if there are no arguments.
 
-detab - replace tabs with proper spaces, accepting tab stops (positions) as arguments */
+detab - replace tabs with proper spaces, accepting tab stops (positions) as arguments 
+
+gcc -Wall -Wextra -O2 -o detab main.c
+
+printf '\tX\n' | ./detab 4 10 20 | od -An -t x1
+Exptected output: 20 20 20 58 0a
+space space space X \n
+
+printf '\tX\tA\n' | ./detab 4 10 20 | od -An -t x1
+Exptected output: 20 20 20 58 20 20 20 20 20 41 0a
+space space space X space space space space space A \n
+
+printf '\tX\tA\tB\n' | ./detab 4 10 20 | od -An -t x1
+Exptected output: 20 20 20 58 20 20 20 20 20 41 20 20 20 20 20 20 20 20 20 42 0a
+space space space X space space space space space A space space space space space space space space space B \n
+
+printf '\tX\n' | ./detab | od -An -t x1
+Exptected output: 20 20 20 20 20 20 20 58 0a
+space space space space space space space X \n
+
+printf '\tX\tA\n' | ./detab 4 | od -An -t x1
+Exptected output: 20 20 20 58 20 20 20 41 0a
+space space space X space space space A \n
+
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAXLINE    1000
-#define DEFAULT_TAB 8
+#define MAXSTOPS 1000
+#define TABINC   8
 
-/* detab: replace tabs with the proper number of spaces */
-void detab(int tabstop)
-{
-    int c, pos = 0;        // pos = current column
+static int nextstop(int col, const int *stops, int nstops) {
+    for (int i = 0; i < nstops; i++)
+        if (stops[i] > col) return stops[i];
+    return col + (TABINC - (col % TABINC));
+}
+
+int main(int argc, char *argv[]) {
+    int stops[MAXSTOPS];
+    int nstops = 0;
+
+    /* Parse tab stops as increasing column numbers (0-based or 1-based?) */
+    /* Here: treat argv values as 1-based columns (more natural), convert to 0-based. */
+    for (int i = 1; i < argc && nstops < MAXSTOPS; i++) {
+
+        int v = atoi(argv[i]);  // Read argument
+        
+        if (v > 0) stops[nstops++] = v; // Only valid characters
+    }
+
+    int c, col = 1;
 
     while ((c = getchar()) != EOF) {
         if (c == '\t') {
-            /* output enough spaces to reach next tab stop */
-            int spaces = tabstop - (pos % tabstop);
-            if (spaces == 0) spaces = tabstop;   // if already on tab stop
-
-            for (int i = 0; i < spaces; ++i) {
+            int ns = nextstop(col, stops, nstops);
+            while (col < ns) {      // Add spaces until next tab stop is reached
                 putchar(' ');
-                ++pos;
+                col++;
             }
-        }
-        else if (c == '\n') {
-            putchar('\n');
-            pos = 0;
-        }
-        else {
+        } else {    // Print character
             putchar(c);
-            ++pos;
+            if (c == '\n') col = 1;
+            else col++;
         }
     }
-}
-
-int main(int argc, char *argv[])
-{
-    int tabstop = DEFAULT_TAB;
-
-    if (argc > 1) {
-        tabstop = atoi(argv[1]);
-        if (tabstop <= 0)
-            tabstop = DEFAULT_TAB;
-    }
-
-    detab(tabstop);
     return 0;
 }
+
