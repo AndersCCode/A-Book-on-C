@@ -17,7 +17,7 @@ echo "    " | ./entab 5 9 13 | od -An -t x1
 Expected output:  09 0a
 
 7 spaces
-echo "        " | ./entab 5 9 13 | od -An -t x1
+echo "        " | ./entab -4 +8 | od -An -t x1
 Exptected output: 09 20 20 20 0a 
 
 12 spaces
@@ -35,104 +35,62 @@ tab 8, space, space, space, space
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAXLINE 1000
-#define DEFAULT_TAB 8
-#define MAXSTOPS 100
-
-int mygetline(char s[], int lim) {
-    int c = ' ';
-    int i = 0;
-
-    while (i < lim - 1 && (c = getchar()) != EOF && c != '\n')
-        s[i++] = (char)c;
-    if (c == '\n')
-        s[i++] = '\n';
-    s[i] = '\0';
-    return i;
-}
-
-/* If currently in column col (0-based), what column is the next tab stop? */
-static int nextstop(int col, const int *stops, int nstops) {
-    if (nstops > 0) {
-        for (int i = 0; i < nstops; i++)
-            if (stops[i] > col) return stops[i];
-        /* beyond last explicit stop: revert to default repeating tabs */
-    }
-    return col + (DEFAULT_TAB - (col % DEFAULT_TAB));
-}
-
-/* entab: replace strings of blanks with tabs + blanks */
-static void entab(const char s[], int len, const int *stops, int nstops) {
-    int col = 0;      /* current output column (0-based) */
-    int blanks = 0;   /* pending blanks not yet emitted */
-
-    for (int i = 0; i < len; i++) {
-        char c = s[i];
-
-        if (c == ' ') {
-            blanks++;
-            /* If emitting these blanks would land exactly on a tab stop, use a tab */
-            if (col + blanks == nextstop(col, stops, nstops)) {
-                putchar('\t');
-                col += blanks;   /* we advanced by blanks columns */
-                blanks = 0;
-            }
-            continue;
-        }
-
-        /* flush pending blanks before non-blank */
-        while (blanks > 0) {
-            putchar(' ');
-            blanks--;
-            col++;
-        }
-
-        putchar(c);
-
-        if (c == '\n') {
-            col = 0;
-        } else if (c == '\t') {
-            col = nextstop(col, stops, nstops);
-        } else {
-            col++;
-        }
-    }
-
-    /* flush any trailing blanks */
-    while (blanks > 0) {
-        putchar(' ');
-        blanks--;
-        col++;
-    }
+static int nextstop(int col, int m, int n) {
+    if (col < m) return m;
+    return m + (((col - m) / n) + 1) * n;   // Number of columns to get to the next tab stops (see personal notes for further details)
 }
 
 int main(int argc, char *argv[]) {
-    char line[MAXLINE];
-    int stops[MAXSTOPS];
-    int nstops = 0;
-
-    /* Parse tab stops as increasing column numbers (0-based or 1-based?) */
-    /* Here: treat argv values as 1-based columns (more natural), convert to 0-based. */
-    for (int i = 1; i < argc && nstops < MAXSTOPS; i++) {
-        
-        int v = atoi(argv[i]);  // Read argument
-
-        if (v > 0) {    // Only valid characters 
-
-            int col = v - 1; /* convert to 0-based */
-
-             // The first position is always accepted. 
-             // Next arg must be bigger than the last stored
-            if (nstops == 0 || col > stops[nstops - 1]) {  
-                stops[nstops++] = col;  
-            }
-        }
+    if (argc != 3) {
+        fprintf(stderr, "Usage: entab -m +n\n");
+        return 1;
     }
 
-    int len;
+    int m = atoi(argv[1]);
+    int n = atoi(argv[2]);
 
-    while ((len = mygetline(line, MAXLINE)) > 0)
-        entab(line, len, stops, nstops);
+    if (m >= 0 || n <= 0) {
+        fprintf(stderr, "Usage: entab -m +n  (m>0, n>0)\n");
+        return 1;
+    }
+    m = -m;
+
+    int c, col = 1;
+
+    while ((c = getchar()) != EOF) {
+        if (c == ' ') {
+            int nspaces = 1;
+            while ((c = getchar()) == ' ')  // Add the rest of the spaces
+                nspaces++;
+
+            while (nspaces > 0) {
+                int target = nextstop(col, m, n);    // Get the next tab stop 
+                int need = target - col;            // Number of spaces til the next tab stop (from col)
+
+                if (nspaces >= need) {      // Replace spaces with tabs 
+                    putchar('\t');
+                    col = target;
+                    nspaces -= need;
+                } else {
+                    while (nspaces-- > 0) {
+                        putchar(' ');
+                        col++;
+                    }
+                }
+            }
+
+            /* c is the first non-space after the run */
+            if (c == EOF)
+                break;
+            /* fall through to handle c as a normal character */
+        }
+
+        putchar(c);
+        if (c == '\n')
+            col = 1;
+        else
+            col++;
+    }
 
     return 0;
 }

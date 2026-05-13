@@ -19,7 +19,7 @@ Exptected output:  20 20 20 58 20 20 20 20 20 20 20 41 0a
 
 static int nextstop(int col, int m, int n) {
     if (col < m) return m;
-    return m + (((col - m) / n) + 1) * n;
+    return m + (((col - m) / n) + 1) * n; // Number of columns to get to the next tab stops (see personal notes for further details)
 }
 
 int main(int argc, char *argv[]) {
