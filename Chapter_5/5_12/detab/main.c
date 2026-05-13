@@ -6,63 +6,47 @@ detab - replace tabs with proper spaces, accepting tab stops (positions) as argu
 
 gcc -Wall -Wextra -O2 -o detab main.c
 
-printf '\tX\n' | ./detab 4 10 20 | od -An -t x1
+printf '\tX\n' | ./detab -4 +8 | od -An -t x1
 Exptected output: 20 20 20 58 0a
-space space space X \n
 
-printf '\tX\tA\n' | ./detab 4 10 20 | od -An -t x1
-Exptected output: 20 20 20 58 20 20 20 20 20 41 0a
-space space space X space space space space space A \n
-
-printf '\tX\tA\tB\n' | ./detab 4 10 20 | od -An -t x1
-Exptected output: 20 20 20 58 20 20 20 20 20 41 20 20 20 20 20 20 20 20 20 42 0a
-space space space X space space space space space A space space space space space space space space space B \n
-
-printf '\tX\n' | ./detab | od -An -t x1
-Exptected output: 20 20 20 20 20 20 20 58 0a
-space space space space space space space X \n
-
-printf '\tX\tA\n' | ./detab 4 | od -An -t x1
-Exptected output: 20 20 20 58 20 20 20 41 0a
-space space space X space space space A \n
+printf '\tX\t\A\n' | ./detab -4 +8 | od -An -t x1
+Exptected output:  20 20 20 58 20 20 20 20 20 20 20 41 0a
 
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAXSTOPS 1000
-#define TABINC   8
-
-static int nextstop(int col, const int *stops, int nstops) {
-    for (int i = 0; i < nstops; i++)
-        if (stops[i] > col) return stops[i];
-    return col + (TABINC - (col % TABINC));
+static int nextstop(int col, int m, int n) {
+    if (col < m) return m;
+    return m + (((col - m) / n) + 1) * n;
 }
 
 int main(int argc, char *argv[]) {
-    int stops[MAXSTOPS];
-    int nstops = 0;
-
-    /* Parse tab stops as increasing column numbers (0-based or 1-based?) */
-    /* Here: treat argv values as 1-based columns (more natural), convert to 0-based. */
-    for (int i = 1; i < argc && nstops < MAXSTOPS; i++) {
-
-        int v = atoi(argv[i]);  // Read argument
-        
-        if (v > 0) stops[nstops++] = v; // Only valid characters
+    if (argc != 3) {
+        fprintf(stderr, "Usage: detab -m +n where m = start position and n = tab stop interval\n");
+        return 1;
     }
 
-    int c, col = 1;
+    int m = atoi(argv[1]);  // expects -m
+    int n = atoi(argv[2]);  // expects +n
 
+    if (m >= 0 || n <= 0) {
+        fprintf(stderr, "Usage: detab -m +n  (m>0, n>0)\n");
+        return 1;
+    }
+
+    m = -m;                 // convert -m to positive m
+
+    int c, col = 1;
     while ((c = getchar()) != EOF) {
         if (c == '\t') {
-            int ns = nextstop(col, stops, nstops);
-            while (col < ns) {      // Add spaces until next tab stop is reached
+            int ns = nextstop(col, m, n);
+            while (col < ns) {
                 putchar(' ');
                 col++;
             }
-        } else {    // Print character
+        } else {
             putchar(c);
             if (c == '\n') col = 1;
             else col++;
@@ -70,4 +54,3 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
-
