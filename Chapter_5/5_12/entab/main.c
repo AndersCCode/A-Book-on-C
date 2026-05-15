@@ -12,23 +12,9 @@ i.e. 9 spaces should be translated to 1 tab and 1 space */
 
 gcc -Wall -Wextra -O2 -o entab main.c
 
-4 spaces 
-echo "    " | ./entab 5 9 13 | od -An -t x1
-Expected output:  09 0a
-
-7 spaces
+8 spaces
 echo "        " | ./entab -4 +8 | od -An -t x1
 Exptected output: 09 20 20 20 0a 
-
-12 spaces
-echo "            " | ./entab 5 9 13 | od -An -t x1
-Exptected output: 09 09 09 0a 
-tab 5, tab 9, tab 13
-
-12 spaces
-echo "            " | ./entab | od -An -t x1
-Exptected output: 09 20 20 20 20 0a 
-tab 8, space, space, space, space
 
 */
 
