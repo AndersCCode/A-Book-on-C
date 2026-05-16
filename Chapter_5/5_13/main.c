@@ -11,126 +11,100 @@ program of Section 5.6, not in a two-dimensional array of fixed size.
 
 gcc -Wall -Wextra -O2 -o entab main.c
 
-*/
+
+/* tail - print last n lines of input; default n = 10 */
+/* gcc -Wall -Wextra -O2 -o tail tail.c */
+
+// ./tail < input.txt
+// ./tail -3 < input.txt
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
-#define MAXLINES 10000       // max number of lines to be sorted
-#define MAXLEN 10000         // max length of any input line
-#define MAXSTORAGE 1000000    // size of the storage array
+#define MAXLINES   10000
+#define MAXLEN     1000
+#define MAXSTORAGE 1000000
 
-char *lineptr[MAXLINES];    // pointers to the lines 
-char linebuf[MAXSTORAGE];   // array supplied by main (differs from pre-version that uses malloc)
+char *lineptr[MAXLINES];
+char linebuf[MAXSTORAGE];
 
-/* Read a line into s, return length */
-int get_line(char *s, int lim) 
+int get_line(char *s, int lim)
 {
-    
-    int c = 0;
+    int c;
     char *start = s;
 
-    // Read characters to s as long as we haven't reached limit, EOF (CTRL - D) or a newline
     while (--lim > 0 && (c = getchar()) != EOF && c != '\n')
         *s++ = c;
-
     if (c == '\n')
         *s++ = c;
-
     *s = '\0';
-
-    return s - start;
+    return (int)(s - start);
 }
 
-void swap(char *v[], int i, int j) 
+/* Store lines in linebuf; pointers in lineptr. Return count or -1 on overflow. */
+int readlines(char *lineptr[], int maxlines, char *linebuf, int maxstorage)
 {
-    char *temp;
+    int len, nlines;
+    char *p, *end, line[MAXLEN];
 
-    temp = v[i];
-    v[i] = v[j];
-    v[j] = temp;
-}
+    nlines = 0;
+    p = linebuf;
+    end = linebuf + maxstorage;
 
-/* sort v[left]..v[right] into increasing order */
-/*void qsort(char *v[], int left, int right) 
-{
-    int i, last;
-
-    // Do nothting if arrary contains fewer than two elements
-    if (left >= right)
-        return;
-
-     // Move partition element to v[0]
-    swap(v, left, (left + right)/2);
-    last = left;
-
-    for (i = left+1; i <= right; i++) {
-        if (strcmp(v[i], v[left]) < 0)
-            swap(v, ++last, i);
-    }
-    
-        swap(v, left, last);        // restore partition element
-        qsort(v, left, last-1);
-        qsort(v, last+1, right);
-}*/
-
-/* read input lines */
-int readlines(char *lineptr[], char *linebuf, int maxlines, int maxstorage) 
-{
-    int len, nlines = 0;
-    char *p = linebuf;              // next free position in linebuf
-    char line[MAXLEN];
-    
     while ((len = get_line(line, MAXLEN)) > 0) {
-        if (nlines >= maxlines || p + len > linebuf + maxstorage)
+        if (nlines >= maxlines || p + len + 1 > end)
             return -1;
-        
-        line[len-1] = '\0';         // delete newline
-        strcpy(p, line);            // copy the line into the array (buffer)
-        lineptr[nlines++] = p;      // store pointer to this line
-        p += len;                   // move forward in the array (buffer)
+        if (len > 0 && line[len - 1] == '\n')
+            line[--len] = '\0';
+        strcpy(p, line);
+        lineptr[nlines++] = p;
+        p += len + 1;
     }
     return nlines;
 }
 
 void writelines(char *lineptr[], int nlines)
 {
-    while (nlines-- > 0)
-        printf("%s\n", *lineptr++);
+    int i;
+
+    for (i = 0; i < nlines; i++)
+        printf("%s\n", lineptr[i]);
 }
 
-int main(int argc, char *argv[]) {
-    int nlines;         // number of input lines read
-    int nlines_to_write = 0;
+/* Parse optional "-n" (e.g. -10). Default 10. */
+int parse_n(int argc, char *argv[])
+{
+    int n;
 
-    clock_t start, end;
-    double cpu_time_used;
+    if (argc <= 1)
+        return 10;
+    if (argv[1][0] != '-' || argv[1][1] == '\0') {
+        fprintf(stderr, "usage: tail [-n]\n");
+        exit(1);
+    }
+    n = atoi(argv[1] + 1);
+    return n < 0 ? 0 : n;
+}
 
-    start = clock();    // start timing
+int main(int argc, char *argv[])
+{
+    int nlines, n, first;
 
-    if (argc == 1) {
-        fprintf(stderr, "Using default value for n which is 10.\n");
-        nlines_to_write = 10; 
-    } 
-    else if (argc == 2) {
-        nlines_to_write = atoi(argv[2]);
-    } 
+    n = parse_n(argc, argv);
 
-    if ((nlines = readlines(lineptr, linebuf, MAXLINES, MAXSTORAGE)) >= 0) {
-        // qsort(lineptr, 0, nlines - 1);    
-        //printf("\nSorted lines:\n");
-        writelines(lineptr, nlines_to_write);
-
-        end = clock();
-        cpu_time_used = ((double)(end - start) / CLOCKS_PER_SEC);
-
-        printf("\nTime taken: %.4f seconds\n", cpu_time_used);
-
-        return 0;
-    } else {
-        printf("error: input too big to sort\n");
+    if ((nlines = readlines(lineptr, MAXLINES, linebuf, MAXSTORAGE)) < 0) {
+        fprintf(stderr, "tail: input too large\n");
         return 1;
-    } 
+    }
+
+    if (n == 0)
+        return 0;
+
+    if (n > nlines)
+        n = nlines;
+    first = nlines - n;
+
+    writelines(lineptr + first, n);
+    return 0;
 }
