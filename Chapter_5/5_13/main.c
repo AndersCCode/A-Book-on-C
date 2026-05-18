@@ -11,12 +11,9 @@ program of Section 5.6, not in a two-dimensional array of fixed size.
 
 gcc -Wall -Wextra -O2 -o entab main.c
 
+tail - print last n lines of input; default n = 10
 
-/* tail - print last n lines of input; default n = 10 */
-/* gcc -Wall -Wextra -O2 -o tail tail.c */
-
-// ./tail < input.txt
-// ./tail -3 < input.txt
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +28,7 @@ char linebuf[MAXSTORAGE];
 
 int get_line(char *s, int lim)
 {
-    int c;
+    int c = 0;
     char *start = s;
 
     while (--lim > 0 && (c = getchar()) != EOF && c != '\n')
@@ -52,10 +49,10 @@ int readlines(char *lineptr[], int maxlines, char *linebuf, int maxstorage)
     p = linebuf;
     end = linebuf + maxstorage;
 
-    while ((len = get_line(line, MAXLEN)) > 0) {
-        if (nlines >= maxlines || p + len + 1 > end)
+    while ((len = get_line(line, MAXLEN)) > 0) {        
+        if (nlines >= maxlines || p + len + 1 > end)    // Handle overflow - either more lines than allowed or linebuf is full
             return -1;
-        if (len > 0 && line[len - 1] == '\n')
+        if (len > 0 && line[len - 1] == '\n')           // Remove \n (writelines puts it back with printf)
             line[--len] = '\0';
         strcpy(p, line);
         lineptr[nlines++] = p;
@@ -83,7 +80,7 @@ int parse_n(int argc, char *argv[])
         fprintf(stderr, "usage: tail [-n]\n");
         exit(1);
     }
-    n = atoi(argv[1] + 1);
+    n = atoi(argv[1] + 1);      // Same as &argv[1][1]
     return n < 0 ? 0 : n;
 }
 
@@ -101,9 +98,9 @@ int main(int argc, char *argv[])
     if (n == 0)
         return 0;
 
-    if (n > nlines)
+    if (n > nlines)     // If more lines than available
         n = nlines;
-    first = nlines - n;
+    first = nlines - n; // Index to the first line to print
 
     writelines(lineptr + first, n);
     return 0;
