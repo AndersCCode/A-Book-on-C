@@ -1,5 +1,5 @@
-/* Modify the sort program to handle a -r flag, which indicates sorting in reverse (decreasing)
-order. Be sure that -r works with -n.
+/* Add the option -f to fold upper and lower case together, so that case distinctions are not made
+during sorting; for example, a and A compare equal.
 
 gcc -Wall -Wextra -O2 -o sort main.c
 
@@ -23,6 +23,7 @@ char linebuf[MAXSTORAGE];
 
 int numeric = 0;
 int reverse = 0;
+int fold = 0;
 
 int numcmp(const char *s1, const char *s2)
 {
@@ -39,8 +40,22 @@ int numcmp(const char *s1, const char *s2)
 /* strcmp or numcmp, then apply -r */
 int mycomp(const char *s1, const char *s2)
 {
-    int r = numeric ? numcmp(s1, s2) : strcmp(s1, s2);
-    return reverse ? -r : r;
+    /*int r = numeric ? numcmp(s1, s2) : strcmp(s1, s2);
+    return reverse ? -r : r; */
+
+    int r = 0;
+
+    if (numeric) {
+        r = numcmp(s1, s2);
+    } else {
+        r = strcmp(s1, s2);
+    }
+
+    if (fold) {
+        r = strcasecmp(s1, s2);
+    }
+
+    return reverse ? -r : r; 
 }
 
 void swap(void *v[], int i, int j)
@@ -118,6 +133,8 @@ int main(int argc, char *argv[])
             numeric = 1;
         else if (strcmp(argv[i], "-r") == 0)
             reverse = 1;
+        else if (strcmp(argv[i], "-f") == 0)
+            fold = 1;
     }
 
     if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
