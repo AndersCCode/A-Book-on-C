@@ -40,20 +40,17 @@ int numcmp(const char *s1, const char *s2)
 /* strcmp or numcmp, then apply -r */
 int mycomp(const char *s1, const char *s2)
 {
-    /*int r = numeric ? numcmp(s1, s2) : strcmp(s1, s2);
-    return reverse ? -r : r; */
-
     int r = 0;
 
     if (numeric) {
         r = numcmp(s1, s2);
-    } else {
-        r = strcmp(s1, s2);
-    }
-
-    if (fold) {
+    } 
+    else if (fold) {
         r = strcasecmp(s1, s2);
     }
+    else {
+        r = strcmp(s1, s2);
+    } 
 
     return reverse ? -r : r; 
 }
