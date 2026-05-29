@@ -1,21 +1,25 @@
-/* Add the option -f to fold upper and lower case together, so that case distinctions are not made
-during sorting; for example, a and A compare equal.
+/* Add the -d ("directory order") option, which makes comparisons only on letters, numbers and blanks.
+   Make sure it works in conjunction with -f.
 
-gcc -Wall -Wextra -O2 -o sort main.c
+   gcc -Wall -Wextra -O2 -o sort main.c
 
-printf '%s\n' zebra apple 42 7 banana | ./sort          # lexicographic
-printf '%s\n' zebra apple 42 7 banana | ./sort -r       # reverse lexicographic
-printf '%s\n' zebra apple 42 7 banana | ./sort -n       # numeric
-printf '%s\n' zebra apple 42 7 banana | ./sort -n -r    # numeric, decreasing
+   printf '%s\n' zebra apple 42 7 banana | ./sort          # lexicographic
+   printf '%s\n' zebra apple 42 7 banana | ./sort -r       # reverse lexicographic
+   printf '%s\n' zebra apple 42 7 banana | ./sort -n       # numeric
+   printf '%s\n' zebra apple 42 7 banana | ./sort -n -r    # numeric, decreasing
 
-printf '%s\n' Zebra zebra Apple apple 42 7 banana | ./sort -f       # case-insensitive (fold case)
-printf '%s\n' Zebra zebra Apple apple 42 7 banana | ./sort -f -r    # case-insensitive, reversed
+   printf '%s\n' Zebra zebra Apple apple 42 7 banana | ./sort -f       # case-insensitive
+   printf '%s\n' Zebra zebra Apple apple 42 7 banana | ./sort -f -r    # case-insensitive, reversed
 
+   printf '%s\n' 'a#1' 'a1' 'a-1' | ./sort -d
+   printf '%s\n' Zebra zebra '#zebra' | ./sort -d -f
 */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #define MAXLINES   5000
 #define MAXLEN     1000
@@ -27,35 +31,65 @@ char linebuf[MAXSTORAGE];
 int numeric = 0;
 int reverse = 0;
 int fold = 0;
+int directory = 0;
+
+static int is_directory_char(int c)
+{
+    unsigned char uc = (unsigned char)c;
+    return isalnum(uc) || isspace(uc);
+}
 
 int numcmp(const char *s1, const char *s2)
 {
     double v1 = atof(s1);
     double v2 = atof(s2);
+
     if (v1 < v2)
         return -1;
-    else if (v1 > v2)
+    if (v1 > v2)
         return 1;
-    else
-        return 0;
+    return 0;
 }
 
-/* strcmp or numcmp, then apply -r */
+int dircomp(const char *s1, const char *s2)
+{
+    for (;;) {
+        while (*s1 && !is_directory_char((unsigned char)*s1))
+            s1++;
+        while (*s2 && !is_directory_char((unsigned char)*s2))
+            s2++;
+
+        int c1 = (unsigned char)*s1;
+        int c2 = (unsigned char)*s2;
+
+        if (fold) {
+            c1 = tolower(c1);
+            c2 = tolower(c2);
+        }
+
+        if (c1 != c2)
+            return c1 - c2;
+        if (c1 == '\0')
+            return 0;
+        s1++;
+        s2++;
+    }
+}
+
 int mycomp(const char *s1, const char *s2)
 {
-    int r = 0;
+    int r;
 
-    if (numeric) {
+    if (numeric)
         r = numcmp(s1, s2);
-    } 
-    else if (fold) {
+    else if (directory)
+        r = dircomp(s1, s2);
+    else if (fold)
         r = strcasecmp(s1, s2);
-    }
-    else {
+    else
         r = strcmp(s1, s2);
-    } 
 
-    return reverse ? -r : r; 
+    return reverse ? -r : r;
 }
 
 void swap(void *v[], int i, int j)
@@ -67,8 +101,9 @@ void swap(void *v[], int i, int j)
 
 int get_line(char *s, int lim)
 {
-    int c = 0;
+    int c;
     char *start = s;
+
     while (--lim > 0 && (c = getchar()) != EOF && c != '\n')
         *s++ = c;
     if (c == '\n')
@@ -100,13 +135,13 @@ int readlines(char *lineptr[], int maxlines)
 void writelines(char *lineptr[], int nlines)
 {
     int i;
+
     for (i = 0; i < nlines; i++)
         printf("%s\n", lineptr[i]);
 }
 
-/* Renamed: stdlib already has qsort() */
 void mysort(void *v[], int left, int right,
-            int (*comp)(const char *, const char *))    // Call the compare function on these two elements
+            int (*comp)(const char *, const char *))
 {
     int i, last;
 
@@ -115,7 +150,7 @@ void mysort(void *v[], int left, int right,
     swap(v, left, (left + right) / 2);
     last = left;
     for (i = left + 1; i <= right; i++) {
-        if ((*comp)(v[i], v[left]) < 0)
+        if ((*comp)((const char *)v[i], (const char *)v[left]) < 0)
             swap(v, ++last, i);
     }
     swap(v, left, last);
@@ -135,14 +170,16 @@ int main(int argc, char *argv[])
             reverse = 1;
         else if (strcmp(argv[i], "-f") == 0)
             fold = 1;
+        else if (strcmp(argv[i], "-d") == 0)
+            directory = 1;
     }
 
     if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
-        mysort((void **)lineptr, 0, nlines - 1, mycomp);  
+        mysort((void **)lineptr, 0, nlines - 1, mycomp);
         writelines(lineptr, nlines);
         return 0;
-    } else {
-        printf("input is too big to sort\n");
-        return 1;
     }
+
+    printf("input is too big to sort\n");
+    return 1;
 }
