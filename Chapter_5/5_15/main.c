@@ -8,6 +8,9 @@ printf '%s\n' zebra apple 42 7 banana | ./sort -r       # reverse lexicographic
 printf '%s\n' zebra apple 42 7 banana | ./sort -n       # numeric
 printf '%s\n' zebra apple 42 7 banana | ./sort -n -r    # numeric, decreasing
 
+printf '%s\n' Zebra zebra Apple apple 42 7 banana | ./sort -f       # case-insensitive
+printf '%s\n' Zebra zebra Apple apple 42 7 banana | ./sort -f -r    # case-insensitive, reversed
+
 */
 
 #include <stdio.h>
