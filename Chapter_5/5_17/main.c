@@ -2,125 +2,181 @@
 according to an independent set of options. (The index for this book was sorted with -df for the index category 
 and -n for the page numbers)
 
-   gcc -Wall -Wextra -O2 -o sort main.c
+gcc -Wall -Wextra -O2 -o sort main.c
 
-   printf '%s\n' zebra apple 42 7 banana | ./sort          # lexicographic
-   printf '%s\n' zebra apple 42 7 banana | ./sort -r       # reverse lexicographic
-   printf '%s\n' zebra apple 42 7 banana | ./sort -n       # numeric
-   printf '%s\n' zebra apple 42 7 banana | ./sort -n -r    # numeric, decreasing
-
-   printf '%s\n' Zebra zebra Apple apple 42 7 banana | ./sort -f       # case-insensitive
-   printf '%s\n' Zebra zebra Apple apple 42 7 banana | ./sort -f -r    # case-insensitive, reversed
-
-   printf '%s\n' 'a#1' 'a1' 'a-1' | ./sort -d
-   printf '%s\n' Zebra zebra '#zebra' | ./sort -d -f
+Examples:
+    printf '%s\n' "Binary search  123" "binary tree 45" "Binary search  7" | ./sort -k1df -k2n
+    printf '%s\n' zebra apple 42 7 banana | ./sort
+    printf '%s\n' zebra apple 42 7 banana | ./sort -r
 */
 
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 
 #define MAXLINES   5000
 #define MAXLEN     1000
 #define MAXSTORAGE 1000000
+#define MAXKEYS    32
 
 char *lineptr[MAXLINES];
 char linebuf[MAXSTORAGE];
 
-int numeric = 0;
-int reverse = 0;
-int fold = 0;
-int directory = 0;
+/* legacy whole-line flags if no -k is used */
+static int g_numeric = 0;
+static int g_fold = 0;
+static int g_directory = 0;
+static int reverse = 0;
 
-static int is_directory_char(int c)
+typedef struct {
+    int field;      /* 0 = whole line, 1 = first field, 2 = second, ... */
+    int numeric;    /* -n */
+    int fold;       /* -f */
+    int directory;  /* -d */
+} Key;
+
+static Key keys[MAXKEYS];
+static int nkeys = 0;
+
+static int is_dir_char(int c)
 {
     unsigned char uc = (unsigned char)c;
     return isalnum(uc) || isspace(uc);
 }
 
-int numcmp(const char *s1, const char *s2)
+/* Return start/end (end is one-past-last) of field k in line.
+   Fields are whitespace-separated. field==0 means whole line. */
+static void field_range(const char *line, int field, const char **start, const char **end)
 {
-    double v1 = atof(s1);
-    double v2 = atof(s2);
+    const char *p = line;
 
-    if (v1 < v2)
-        return -1;
-    if (v1 > v2)
-        return 1;
-    return 0;
+    if (field <= 0) {
+        *start = line;
+        *end = line + strlen(line);
+        return;
+    }
+
+    /* skip leading blanks */
+    while (*p && isspace((unsigned char)*p))
+        p++;
+
+    /* walk fields */
+    for (int f = 1; f < field && *p; f++) {
+        while (*p && !isspace((unsigned char)*p))
+            p++;
+        while (*p && isspace((unsigned char)*p))
+            p++;
+    }
+
+    *start = p;
+    while (*p && !isspace((unsigned char)*p))
+        p++;
+    *end = p;
 }
 
-int dircomp(const char *s1, const char *s2)
+/* Compare two slices [a,ae) and [b,be) lexicographically with optional -f and -d */
+static int slice_textcmp(const char *a, const char *ae,
+                         const char *b, const char *be,
+                         int fold, int directory)
 {
     for (;;) {
-        while (*s1 && !is_directory_char((unsigned char)*s1))
-            s1++;
-        while (*s2 && !is_directory_char((unsigned char)*s2))
-            s2++;
+        int ca, cb;
 
-        int c1 = (unsigned char)*s1;
-        int c2 = (unsigned char)*s2;
-
-        if (fold) {
-            c1 = tolower(c1);
-            c2 = tolower(c2);
+        if (directory) {
+            while (a < ae && !is_dir_char((unsigned char)*a))
+                a++;
+            while (b < be && !is_dir_char((unsigned char)*b))
+                b++;
         }
 
-        if (c1 != c2)
-            return c1 - c2;
-        if (c1 == '\0')
+        ca = (a < ae) ? (unsigned char)*a : 0;
+        cb = (b < be) ? (unsigned char)*b : 0;
+
+        if (fold) {
+            ca = tolower((unsigned char)ca);
+            cb = tolower((unsigned char)cb);
+        }
+
+        if (ca != cb)
+            return ca - cb;
+
+        if (ca == 0)
             return 0;
-        s1++;
-        s2++;
+
+        a++;
+        b++;
     }
 }
 
-int mycomp(const char *s1, const char *s2)
+/* Numeric compare two slices (copies into small buffers to NUL-terminate) */
+static int slice_numcmp(const char *a, const char *ae,
+                        const char *b, const char *be)
 {
-    int r;
+    char ta[MAXLEN], tb[MAXLEN];
+    size_t na = (size_t)(ae - a);
+    size_t nb = (size_t)(be - b);
 
-    if (numeric)
-        r = numcmp(s1, s2);
-    else if (directory)
-        r = dircomp(s1, s2);
-    else if (fold)
-        r = strcasecmp(s1, s2);
-    else
-        r = strcmp(s1, s2);
+    if (na >= sizeof ta) na = sizeof ta - 1;
+    if (nb >= sizeof tb) nb = sizeof tb - 1;
 
-    return reverse ? -r : r;
+    memcpy(ta, a, na); ta[na] = '\0';
+    memcpy(tb, b, nb); tb[nb] = '\0';
+
+    double va = atof(ta);
+    double vb = atof(tb);
+
+    if (va < vb) return -1;
+    if (va > vb) return 1;
+    return 0;
 }
 
-void swap(void *v[], int i, int j)
+static int keycmp(const char *s1, const char *s2)
+{
+    for (int i = 0; i < nkeys; i++) {
+        const char *a, *ae, *b, *be;
+        field_range(s1, keys[i].field, &a, &ae);
+        field_range(s2, keys[i].field, &b, &be);
+
+        int r;
+        if (keys[i].numeric)
+            r = slice_numcmp(a, ae, b, be);
+        else
+            r = slice_textcmp(a, ae, b, be, keys[i].fold, keys[i].directory);
+
+        if (r != 0)
+            return reverse ? -r : r;
+    }
+    return 0;
+}
+
+static void swap(void *v[], int i, int j)
 {
     void *temp = v[i];
     v[i] = v[j];
     v[j] = temp;
 }
 
-int get_line(char *s, int lim)
+static int get_line(char *s, int lim)
 {
     int c;
     char *start = s;
 
     while (--lim > 0 && (c = getchar()) != EOF && c != '\n')
-        *s++ = c;
+        *s++ = (char)c;
     if (c == '\n')
-        *s++ = c;
+        *s++ = (char)c;
     *s = '\0';
     return (int)(s - start);
 }
 
-int readlines(char *lineptr[], int maxlines)
+static int readlines(char *lineptr[], int maxlines)
 {
-    int len, nlines;
-    char *p, *end, line[MAXLEN];
+    int len, nlines = 0;
+    char *p = linebuf;
+    char *end = linebuf + MAXSTORAGE;
+    char line[MAXLEN];
 
-    nlines = 0;
-    p = linebuf;
-    end = linebuf + MAXSTORAGE;
     while ((len = get_line(line, MAXLEN)) > 0) {
         if (nlines >= maxlines || p + len + 1 > end)
             return -1;
@@ -133,24 +189,22 @@ int readlines(char *lineptr[], int maxlines)
     return nlines;
 }
 
-void writelines(char *lineptr[], int nlines)
+static void writelines(char *lineptr[], int nlines)
 {
-    int i;
-
-    for (i = 0; i < nlines; i++)
+    for (int i = 0; i < nlines; i++)
         printf("%s\n", lineptr[i]);
 }
 
-void mysort(void *v[], int left, int right,
-            int (*comp)(const char *, const char *))
+static void mysort(void *v[], int left, int right,
+                   int (*comp)(const char *, const char *))
 {
-    int i, last;
-
     if (left >= right)
         return;
+
     swap(v, left, (left + right) / 2);
-    last = left;
-    for (i = left + 1; i <= right; i++) {
+    int last = left;
+
+    for (int i = left + 1; i <= right; i++) {
         if ((*comp)((const char *)v[i], (const char *)v[left]) < 0)
             swap(v, ++last, i);
     }
@@ -159,28 +213,55 @@ void mysort(void *v[], int left, int right,
     mysort(v, last + 1, right, comp);
 }
 
+/* Parse -k like: -k1df, -k2n, -k3fd, etc. */
+static void add_key_from_arg(const char *arg)
+{
+    /* arg points at the 'k' in "-k..." or at the digits in "k..." */
+    if (*arg == 'k') arg++;
+
+    int field = 0;
+    while (isdigit((unsigned char)*arg)) {
+        field = field * 10 + (*arg - '0');
+        arg++;
+    }
+
+    if (field <= 0 || nkeys >= MAXKEYS)
+        return;
+
+    Key k = {0};
+    k.field = field;
+
+    for (; *arg; arg++) {
+        if (*arg == 'n') k.numeric = 1;
+        else if (*arg == 'f') k.fold = 1;
+        else if (*arg == 'd') k.directory = 1;
+    }
+
+    keys[nkeys++] = k;
+}
+
 int main(int argc, char *argv[])
 {
-    int nlines;
-    int i;
-
-    for (i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-n") == 0)
-            numeric = 1;
-        else if (strcmp(argv[i], "-r") == 0)
-            reverse = 1;
-        else if (strcmp(argv[i], "-f") == 0)
-            fold = 1;
-        else if (strcmp(argv[i], "-d") == 0)
-            directory = 1;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-r") == 0) reverse = 1;
+        else if (strcmp(argv[i], "-n") == 0) g_numeric = 1;
+        else if (strcmp(argv[i], "-f") == 0) g_fold = 1;
+        else if (strcmp(argv[i], "-d") == 0) g_directory = 1;
+        else if (strncmp(argv[i], "-k", 2) == 0) add_key_from_arg(argv[i] + 1);
     }
 
-    if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
-        mysort((void **)lineptr, 0, nlines - 1, mycomp);
-        writelines(lineptr, nlines);
-        return 0;
+    /* If no keys specified, use one whole-line key with legacy flags */
+    if (nkeys == 0) {
+        keys[nkeys++] = (Key){ .field = 0, .numeric = g_numeric, .fold = g_fold, .directory = g_directory };
     }
 
-    printf("input is too big to sort\n");
-    return 1;
+    int nlines = readlines(lineptr, MAXLINES);
+    if (nlines < 0) {
+        printf("input is too big to sort\n");
+        return 1;
+    }
+
+    mysort((void **)lineptr, 0, nlines - 1, keycmp);
+    writelines(lineptr, nlines);
+    return 0;
 }
