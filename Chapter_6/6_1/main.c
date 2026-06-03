@@ -28,6 +28,7 @@ struct key keytab[] = {
     {"default", 0},
     {"/* ... */", 0},
     {"unsigned", 0},
+    {"my_var", 0},
     {"void", 0},
     {"volatile", 0},
     {"while", 0}
@@ -77,23 +78,29 @@ int getword(char *word, int lim)
     int c;
     char *w = word;
 
+    // skip whitespaces
     while (isspace(c = getch()))
         ;
     
+    // Read first charachter
     if (c != EOF)
         *w++ = c;
     
-    if (!isalpha(c)) {
+    // If it's not the start of an identifier, return it as is.
+    if (!isalpha(c) && (c != '_')) {
         *w = '\0';
         return c;
     }
 
-    for ( ; --lim > 0; w++)
-        if (!isalnum(*w = getch())) {
+    // Now read the rest of the identifier (letters, digits or underscore)
+    for ( ; --lim > 0; w++) {
+        *w = getch();
+
+        if (!isalnum(*w) && *w != '_') {
             ungetch(*w);
             break;
         }
-    
+    }
     *w = '\0';
     
     return word[0];
