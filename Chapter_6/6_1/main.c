@@ -20,6 +20,7 @@ struct key {
 
 struct key keytab[] = {
     {"auto", 0},
+    {"__abc__", 0},
     {"break", 0},
     {"case", 0},
     {"char", 0},
@@ -29,13 +30,16 @@ struct key keytab[] = {
     {"/* ... */", 0},
     {"unsigned", 0},
     {"my_var", 0},
+    {"my__var", 0},
+    {"_temp", 0},
+    {"var_123_test", 0},
     {"void", 0},
     {"volatile", 0},
     {"while", 0}
 };
 
 char buf[BUFSIZE];      // Buffer for ungetch
-int bufp = 0;           // Next free position i buf
+int bufp = 0;           // Next free position in buf
 
 // Find word in tab[0]...tab[n-1]
 int binsearch(char *word, struct key tab[], int n)
@@ -87,7 +91,7 @@ int getword(char *word, int lim)
         *w++ = c;
     
     // If it's not the start of an identifier, return it as is.
-    if (!isalpha(c) && (c != '_')) {
+    if (!isalpha(c) && (c != '_')) {    // c is not a letter and not and underscore
         *w = '\0';
         return c;
     }
@@ -113,7 +117,7 @@ int main(void)
     char word[MAXWORD];
 
     while (getword(word, MAXWORD) != EOF)
-        if (isalpha(word[0]))
+        if (isalpha(word[0]) || (word[0] == '_'))
             if ((n = binsearch(word, keytab, NKEYS)) >= 0)
                 keytab[n].count++;
     
