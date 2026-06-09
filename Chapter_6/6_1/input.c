@@ -1,12 +1,5 @@
-auto
-break
-case
-char
-const
-continue
-default
-/* ... */
-unsigned
-void
-volatile
-while
+int main(void)
+{
+    return 0;
+}
+

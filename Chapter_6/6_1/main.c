@@ -19,19 +19,19 @@ struct key {
 };
 
 struct key keytab[] = {
-    {"auto", 0},
+    {"/* ... */", 0},
+    {"__FILE__", 0},
     {"__abc__", 0},
+    {"_temp", 0},
+    {"auto", 0},
     {"break", 0},
     {"case", 0},
     {"char", 0},
     {"const", 0},
     {"continue", 0},
     {"default", 0},
-    {"/* ... */", 0},
-    {"unsigned", 0},
     {"my_var", 0},
-    {"my__var", 0},
-    {"_temp", 0},
+    {"unsigned", 0},
     {"var_123_test", 0},
     {"void", 0},
     {"volatile", 0},
@@ -98,12 +98,15 @@ int getword(char *word, int lim)
 
     // Now read the rest of the identifier (letters, digits or underscore)
     for ( ; --lim > 0; w++) {
-        *w = getch();
+        // *w = getch();
+        c = getch();        // read first
 
-        if (!isalnum(*w) && *w != '_') {
-            ungetch(*w);
+        if (!isalnum(c) && c != '_') { // check before storing to w
+            ungetch(c);
             break;
         }
+
+        *w = c;
     }
     *w = '\0';
     
