@@ -38,7 +38,7 @@ int binary_search(char *word, struct key tab[], int n);
 int getch(void);
 void ungetch(int c);
 int get_word(char *word, int lim);
-void skip_string(int quote);
+void skip_string(int quote);                                                                                                                                                                         
 
 int main(void) 
 {
@@ -83,13 +83,15 @@ int get_word(char *word, int lim)
     int c;
     char *w = word;
 
-    // skip whitespaces
-    while (isspace(c = getch()))
-        ;
-    
-    // Read first charachter
-    if (c != EOF)
-        *w++ = c;
+    /* Skip whitespace. Any newline we pass means the next non-white space
+    token will be at the beginning of a line */
+    while (isspace(c = getch())) {
+        if (c == '\n')
+            at_beginning_of_line = 1;
+    }
+
+    if (c == EOF)
+        return EOF;
     
     // If it's not the start of an identifier, return it as is.
     if (!isalpha(c) && (c != '_')) {    // c is not a letter and not and underscore
@@ -136,16 +138,18 @@ void skip_string(int quote)
         /*  If a string (or character constant) spans lines, we must correctly maintain the flag for marking 
         beginning of the line so that a # on a later line is still properly recognized as a preprocessor directive. */
         if (c == '\n') 
-            at_beginning_of_line = 1;
+            at_beginning_of_line = 1;   // We've reached a new line.
 
-        if (c =='\\') {
+        if (c =='\\') {     /* input contains \\ Example: char *path = "c:\\Windows\\System32"; */
+
             /* Consume the escaped character (even if quote or backslash) */
-            int esc = getch();
+            int esc = getch();  /* read second \ */
 
             if (esc == '\n')
                 at_beginning_of_line = 1;
-            continue;
+            continue;   /* Go back to the top of the loop */
         }
+
         if (c == quote)     // Found the closing quote, which was the goal.
             return;
     }
