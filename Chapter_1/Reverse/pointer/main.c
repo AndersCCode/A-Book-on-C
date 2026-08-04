@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 void reverse(char *s) {
-    /* empty */
     if (*s == '\0') {
         printf("Empty string\n");
         return;
