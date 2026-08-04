@@ -90,7 +90,7 @@ int get_word(char *word, int lim)
             at_beginning_of_line = 1;
     }
 
-    if (c == EOF)
+    if (c == EOF)   // Ctrl + D
         return EOF;
     
     // If it's not the start of an identifier, return it as is.
