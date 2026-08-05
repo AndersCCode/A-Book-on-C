@@ -1,3 +1,5 @@
+/* gcc -Wextra -Wall -o2 -o reverse main.c */
+
 #include <stdio.h>
 
 void reverse(char *s) {
