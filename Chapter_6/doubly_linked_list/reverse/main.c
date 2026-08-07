@@ -24,37 +24,36 @@ if (!file) {
     return 1;
 } 
 
-while (fgets(line, sizeof(line), file) != NULL) { 
+while (fgets(line, sizeof(line), file)) { 
     char *save = (char *) malloc(strlen(line) + 1);
     strcpy(save, line);
-    printf("[Debug] line: %s\n", line);
 
     struct lnode *new = (struct lnode *) malloc(sizeof(struct lnode));
 
     new->text = save;
     new->next = NULL;
-    tail = new;
-    printf("[Debug] new->text: %s new->next: %p\n", new->text, new->next);
-    
-    if (head == NULL) {
-        head = new;
-        printf("[Debug] head.text: %s", head->text);
-    }
+    new->prev = tail;
+        
+    if (head == NULL) head = new;
 
-    if (tail != NULL) {
-        tail->next = new;
-        printf("[Debug] tail.text: %s", tail->text);
-    }
-    
+    if (tail != NULL) tail->next = new;
+
     tail = new;
 }
 
-printf("[Debug] After while\n");
+printf("\nThe list\n");
+printf("----------------------\n");
+
+for (current = head; current != NULL; current = current->next) {
+    printf("%s", current->text);
+}
+
+printf("\nThe reversed list\n");
+printf("----------------------\n");
 
 for (current = tail; current != NULL; current = current->prev) {
     printf("%s", current->text);
 }
 
 return 0;
-
 }

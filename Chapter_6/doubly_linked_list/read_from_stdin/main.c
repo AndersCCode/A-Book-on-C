@@ -35,8 +35,8 @@ while (fgets(line, MAXLINE, stdin) != NULL) {
     tail = new;
 }
 
-printf("\nPrint of list\n");
-printf("---------------\n");
+printf("\nThe list\n");
+printf("---------\n");
 
 for (current = head; current != NULL; current = current->next) {
     printf("%s", current->text);
