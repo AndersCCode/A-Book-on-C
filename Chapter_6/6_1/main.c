@@ -45,14 +45,16 @@ int main(void)
     int n;
     char word[MAXWORD];
 
-    while (get_word(word, MAXWORD) != EOF)
+    while (get_word(word, MAXWORD) != EOF) {
+        printf("[Debug] Word = %s\n", word);
         if (isalpha(word[0]) || (word[0] == '_'))
             if ((n = binary_search(word, key_table, NKEYS)) >= 0)
                 key_table[n].count++;
-    
+    }
+
     for (n = 0; n < (int)NKEYS; n++) 
-        if (key_table[n].count > 0)
-            printf("%4d %s\n", key_table[n].count, key_table[n].word);
+        //if (key_table[n].count > 0)
+        printf("%4d %s\n", key_table[n].count, key_table[n].word);
 
     return 0;
 }
@@ -69,11 +71,11 @@ int binary_search(char *word, struct key tab[], int n)
     while (low <= high) {
         mid = (low + high ) / 2;
         if ((cond = strcmp(word, tab[mid].word)) < 0)
-            high = mid - 1;
+            high = mid - 1; // word on the left side of mid
         else if (cond > 0)
-            low = mid + 1;
+            low = mid + 1;  // word is on the right side of mid
         else 
-            return mid;
+            return mid; // word is found
     }
     return -1;
 }
@@ -98,7 +100,7 @@ int get_word(char *word, int lim)
         *w = '\0';
         return c;
     }
-
+   
     /* string literal */
     if (c == '"') {
         skip_string('"');
@@ -111,10 +113,19 @@ int get_word(char *word, int lim)
         return get_word(word, lim);
     }
 
+    printf("[Debug][get_word][rest - before for] Word = %c\n", c);
+    *w = c;
+    w++;
+    printf("[Debug][get_word][rest - before for after write to w] Word = %c\n", c);
+
     // Now read the rest of the identifier (letters, digits or underscore)
     for ( ; --lim > 0; w++) {
-        // *w = getch();
+        printf("[Debug][get_word][rest - before getch] Word = %c\n", c);
+        //*w = getch();
+        //*w = c;     
+
         c = getch();        // read first
+        printf("[Debug][get_word][rest - after getch] Word = %c\n", c);
 
         if (!isalnum(c) && c != '_') { // check before storing to w
             ungetch(c);
@@ -125,6 +136,7 @@ int get_word(char *word, int lim)
     }
     *w = '\0';
     
+    printf("[Debug][get_word] Word = %s\n", word);
     return word[0];
 }
 
