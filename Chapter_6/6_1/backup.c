@@ -135,14 +135,9 @@ void skip_string(int quote)
     int c;
 
     while ((c = getch()) != EOF) {
-        //if (c =='\\') {     /* input contains \\ Example: char *path = "c:\\Windows\\System32"; */
-
-        //c = getch();  /* read second \ */
-
         if (c == quote)     // Found the closing quote, which was the goal.
             return;
         }
-    //}
 }
 
 /* Get a (possibly pushed back) character */

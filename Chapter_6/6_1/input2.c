@@ -1,3 +1,0 @@
-auto
-auto
-auto

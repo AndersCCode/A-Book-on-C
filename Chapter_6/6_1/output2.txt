@@ -1,4 +1,0 @@
-   1 char
-   6 int
-   1 return
-   1 void
