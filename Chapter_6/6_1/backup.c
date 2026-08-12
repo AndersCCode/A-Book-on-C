@@ -97,16 +97,18 @@ int get_word(char *word, int lim)
     }
    
     /* string literal */
-    if (c == '"') {
+    /*if (c == '"') {
+        printf("[Debug] String literal - Never reached ?");
         skip_string('"');
-        return get_word(word, lim);
+        return get_word(word, lim);     // get next token
     }
 
      /* character constant */
-    if (c == '\'') {
+    /*if (c == '\'') {
+        printf("[Debug] String literal - Never reached ?");
         skip_string('\'');
-        return get_word(word, lim);
-    }
+        return get_word(word, lim);     // get next token
+    }*/
 
     // Save character before proceeding to the next
     *w = c;

@@ -32,11 +32,15 @@ struct key key_table[] = {
 char buf[BUFSIZE];      /* Buffer for ungetch */
 int bufp = 0;           /* Next free position in buf */
 
+int at_beginning_of_line = 0;
+
 int binary_search(char *word, struct key tab[], int n);
 int getch(void);
 void ungetch(int c);
 int get_word(char *word, int lim);
 void skip_string(int quote);                                                                                                                                                                         
+void skip_line(void);
+void skip_comment(in_star);
 
 int main(void) 
 {
@@ -84,13 +88,26 @@ int get_word(char *word, int lim)
     /* Skip whitespace. Any newline we pass means the next non-white space
     token will be at the beginning of a line */
     while (isspace(c = getch())) {
-        ;
+        if (c == '\n')
+            at_beginning_of_line = 1;
     }
 
     if (c == EOF)   // Ctrl + D
         return EOF;
     
-    // If it's not the start of an identifier, return it as is.
+    if (c == '#' && at_beginning_of_line) {    
+        skip_line();
+        return get_word(word, lim);
+    }
+
+    if (c == '/') {
+        int next = getch();
+        if (next == '*') {
+            skip_comment(0);
+        }
+    }
+
+        // If it's not the start of an identifier, return it as is.
     if (!isalpha(c) && (c != '_')) {    // c is not a letter and not and underscore
         *w = '\0';
         return c;
@@ -143,6 +160,25 @@ void skip_string(int quote)
             return;
         }
     //}
+}
+void skip_line(void) {
+    int c;
+    while ((c = getch()) != EOF && c != '\n') {
+        ;
+    }
+    at_beginning_of_line = 1;
+}
+
+void skip_comment(in_star) {
+    int c;
+    while (c = getch()) {
+        if (c == '\n') {
+            at_beginning_of_line = 1;
+        }
+
+        if (in)
+    }
+    at_beginning_of_line = 1;
 }
 
 /* Get a (possibly pushed back) character */
